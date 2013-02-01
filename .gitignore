@@ -162,3 +162,4 @@ pip-log.txt
 # Mac crap
 .DS_Store
 /FRC399 Dashboard/CameraDashboard/nbproject/private/
+/linearshootertest/nbproject/private/

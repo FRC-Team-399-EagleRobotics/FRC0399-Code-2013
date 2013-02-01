@@ -6,13 +6,14 @@ package org.team399.y2013.robot.Systems;
 
 import edu.wpi.first.wpilibj.*;
 import org.team399.y2013.Utilities.EagleMath;
+import org.team399.y2013.Utilities.Integrator;
 
 /**
  *
  * @author Jeremy
  */
 public class DriveTrain {
-    private SpeedController m_leftA, m_leftB, m_rightA, m_rightB;   //TODO: Change type to whatever speed controller we use
+    private Talon m_leftA, m_leftB, m_rightA, m_rightB;   //TODO: Change type to whatever speed controller we use
     
     /**
      * Constructor
@@ -35,7 +36,7 @@ public class DriveTrain {
      */
     public void tankDrive(double leftPWM, double rightPWM) {
         leftPWM = (Math.abs(leftPWM) > 1.0) ? 1.0*EagleMath.signum(leftPWM) : leftPWM;      //Clamps inputs to +- 1.0
-        leftPWM = (Math.abs(rightPWM) > 1.0) ? 1.0*EagleMath.signum(rightPWM) : rightPWM;
+        rightPWM = (Math.abs(rightPWM) > 1.0) ? 1.0*EagleMath.signum(rightPWM) : rightPWM;
         m_leftA.set(leftPWM);
         m_leftB.set(leftPWM);
         m_rightA.set(rightPWM);
@@ -72,5 +73,57 @@ public class DriveTrain {
         
         
         tankDrive(leftOut, rightOut);
+    }
+    
+    
+    Integrator throttleIntegrator = new Integrator(0);
+    Integrator turnIntegrator = new Integrator(0);
+    
+    double throttle = 0, turn = 0,
+           prevThrottle = 0, prevTurn = 0;
+    
+    
+    void filteredTankDrive(double left, double right) {
+        double kThrot = 0.0;
+        double kTurn = 0.0;
+        
+        prevThrottle = throttle;
+        prevTurn = turn;
+        throttle = twoStickToThrottle(left, right);
+        turn = twoStickToTurning(left, right);
+        
+        throttleIntegrator.update(kThrot*(throttle-prevThrottle));
+        turnIntegrator.update(kTurn*(turn - prevTurn));
+        
+        throttle += throttleIntegrator.get();
+        turn += turnIntegrator.get();
+        
+        if(throttleIntegrator.get() > 1) {
+            throttleIntegrator.add(-1);
+        } else if(throttleIntegrator.get() <-1) {
+            throttleIntegrator.add(1);
+        } else {
+            throttleIntegrator.reset();
+        }
+        
+        if(turnIntegrator.get() > 1) {
+            turnIntegrator.add(-1);
+        } else if(turnIntegrator.get() <-1) {
+            turnIntegrator.add(1);
+        } else {
+            turnIntegrator.reset();
+        }
+        
+        tankDrive(throttle+turn, throttle-turn);
+        
+    }
+    
+    
+    double twoStickToTurning(double left, double right) {
+        return (left-right)/2;
+    }
+    
+    double twoStickToThrottle(double left, double right) {
+        return (left+right)/2;
     }
 }
