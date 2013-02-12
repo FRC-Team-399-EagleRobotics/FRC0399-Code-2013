@@ -9,6 +9,12 @@ package org.team399.y2013.robot;
 
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Joystick;
+import org.team399.y2013.robot.Systems.Arm;
+import org.team399.y2013.robot.Systems.DriveTrain;
+import org.team399.y2013.robot.Systems.Feeder;
+import org.team399.y2013.robot.Systems.Intake;
+import org.team399.y2013.robot.Systems.Shooter;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -18,12 +24,29 @@ import edu.wpi.first.wpilibj.IterativeRobot;
  * directory.
  */
 public class Main extends IterativeRobot {
+    Joystick driverJoy = new Joystick(Constants.DRIVER_USB);
+    Joystick operatorJoy = new Joystick(Constants.OPERATOR_USB);
+    
+    Arm arm = Arm.getInstance();
+    DriveTrain drive = new DriveTrain(Constants.DRIVE_LEFT_A, 
+                                      Constants.DRIVE_LEFT_B, 
+                                      Constants.DRIVE_RIGHT_A, 
+                                      Constants.DRIVE_RIGHT_B);
+    Feeder feeder = new Feeder(Constants.FEEDER_MOTOR,
+                               Constants.KICKER_PORT);
+    Intake intake = new Intake(Constants.INTAKE_MOTOR, 
+                               Constants.INTAKE_SENSOR);
+    Shooter shooter = Shooter.getInstance();
+    
+    
+    
+    
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-
+        shooter.start();
     }
 
     /**
@@ -38,6 +61,20 @@ public class Main extends IterativeRobot {
      */
     public void teleopPeriodic() {
         
+    }
+    
+    public void operator() {
+        double shooterSet = 0.0;
+        arm.setPointAngle(arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR));
+        if(operatorJoy.getRawButton(1)) {
+            shooterSet = 4000.0;
+        } else if(operatorJoy.getRawButton(2)) {
+            shooterSet = 6000.0;
+        } else {
+            shooterSet = 0.0;
+        }
+        
+        shooter.setShooterSpeed(shooterSet);
     }
     
 }

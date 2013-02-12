@@ -4,15 +4,136 @@
  */
 package org.team399.y2013.robot.Systems;
 
+import edu.wpi.first.wpilibj.CANJaguar;
+import org.team399.y2013.robot.Constants;
+
 /**
  *
  * @author Jeremy
  */
 public class Arm {
     
-    
-    double position = 0.0, error = 0.0
-    public void ControlLoop() {
-        
+
+    private CANJaguar arm = null;
+    //Todo: move constants into constants class.
+    //Todo: look into SDB for constants editing
+    private double ARM_P = Constants.ARM_P, ARM_I = Constants.ARM_I, ARM_D = Constants.ARM_D;
+    private double setpoint;
+    private boolean enabled = false;
+    private int ARM_ID = Constants.ARM_ID;
+    private static Arm instance = null;
+
+    public static Arm getInstance() {
+        if (instance == null) {
+            instance = new Arm();
+        }
+        return instance;
+    }
+
+    private Arm() {
+        int initCounter = 0;
+        while (initCounter <= 10 && arm == null) {
+            arm = initializeArmJaguar(arm, ARM_ID);
+            initCounter++;
+        }
+    }
+
+    public double getSetpoint() {
+        return setpoint;
+    }
+
+    public double getActual() {
+        double angle = -1;
+        try {
+            angle = arm.getPosition();
+        } catch (Throwable t) {
+            System.err.println("ARM CAN Error in getAngle");
+            System.out.println(t);
+
+            arm = initializeArmJaguar(arm, ARM_ID);
+        }
+        return angle;
+    }
+
+    public void setPointAngle(double setpoint) {
+        //angle is relative to horizontal
+        //todo: scale input from angle to pot turns
+        this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
+        try {
+            arm.setX(this.setpoint);
+        } catch (Throwable t) {
+            System.err.println("ARM CAN Error in setpoint change");
+            System.out.println(t);
+
+            arm = initializeArmJaguar(arm, ARM_ID);
+        }
+    }
+
+    public void setPIDConstants(double P, double I, double D) {
+        ARM_P = P;
+        ARM_I = I;
+        ARM_D = D;
+
+        //Only send the updated constants to the Jag if they are sufficiently 
+        //different, to conserve CAN bandwidth.
+        if (Math.abs(P - ARM_P) <= 0.000001
+                || Math.abs(I - ARM_I) <= 0.000001
+                || Math.abs(D - ARM_D) <= 0.000001) {
+            setEnabled(enabled);
+        }
+
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled; // the this is needed because they have the same name
+        try {
+            if (enabled) {
+                arm.setPID(ARM_P, ARM_I, ARM_D);    //not sure if right syntax
+                arm.enableControl();
+            } else {
+                arm.disableControl();
+            }
+        } catch (Throwable t) {
+            System.err.println("ARM CAN Error in Enabling");
+            System.out.println(t);// remember the driver station error message box is small
+
+            //reconfigure the jag, as in the event of a brown out, it loses configuration
+            arm = initializeArmJaguar(arm, ARM_ID);
+        }
+
+    }
+
+    private CANJaguar initializeArmJaguar(CANJaguar armJag, int CAN_ID) {
+
+        try {
+            if (armJag == null) {
+                armJag = new CANJaguar(CAN_ID, CANJaguar.ControlMode.kPosition);
+            }
+
+            if (armJag.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
+            {
+                // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
+                armJag.changeControlMode(CANJaguar.ControlMode.kPosition);
+                armJag.setPositionReference(CANJaguar.PositionReference.kPotentiometer);
+                armJag.configPotentiometerTurns(10);
+
+                //TODO configure soft limits?
+
+
+                //NEED PID constants
+                armJag.setPID(ARM_P, ARM_I, ARM_D);	//not sure if right syntax
+                armJag.enableControl();
+
+
+                armJag.setVoltageRampRate(0.0);	//Might want to play with this during testing
+                armJag.configFaultTime(0.5); //0.5 second is min time.
+            }
+        } catch (Throwable e) {
+            armJag = null; // If a jaguar fails to be initialized, then set it to null, and try initializing at a later time
+            System.err.println("ARM Init CAN ERROR. ID: " + CAN_ID);
+            System.out.println(e);
+        }
+
+        return armJag;
     }
 }

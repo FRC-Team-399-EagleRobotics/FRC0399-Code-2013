@@ -1,13 +1,332 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.team399.y2013.robot.Systems;
 
+import edu.wpi.first.wpilibj.*;
+import org.team399.y2013.Utilities.EagleMath;
+import org.team399.y2013.robot.Constants;
+
 /**
- *
+ * Code to control the 3 motor shooter on Team 399's 2013 robot.
+ * Uses Bang-Bang with Feed Forward to control the rotational velocity of the shooter wheel
+ * Also uses logic to help with graceful degradation
  * @author Jeremy
  */
-public class Shooter {
-    
+public class Shooter implements Runnable {
+
+    final double maxSpeed = 1;	//Max shooter output value
+    final double kV = Constants.SHOOTER_KV * Constants.SHOOTER_GEAR_RATIO;
+    //kV by motor:
+    //CIM   = 443 RPM/V
+    //RS550 = 1608 RPM/V
+    //Mini-CIM = 525 RPM/V
+    final double kT = Constants.SHOOTER_KT; 	//Tuning constant for closed loop velocity control
+    final double kO = Constants.SHOOTER_KO;  //Tuning constant for open loop failsafe mode control
+    final byte SHOOTER_SYNC_GROUP = Constants.SHOOTER_SYNC_GROUP;
+    final int SHOOTER_A_ID = Constants.SHOOTER_A_ID;
+    final int SHOOTER_B_ID = Constants.SHOOTER_B_ID;
+    final int SHOOTER_C_ID = Constants.SHOOTER_C_ID;
+    private double shooter_setpoint;
+    private CANJaguar shooterA = null;
+    private CANJaguar shooterB = null;
+    private CANJaguar shooterC = null;
+    private boolean running = false;
+    private boolean isClosedLoop = true;
+    private boolean initialized = false;
+    private static Shooter singleInstance = null;
+    private Thread thread = new Thread(this);
+
+    //TODO: Sort the above, refer to constants file for IDs
+    private Shooter() // make sure that only this class can make instances of Shooter
+    {
+        //what code should be in here? should we init jags in here?
+        //Leave it blank.
+        // if you put Jag initialization in here, then that occurs on the calling thread.
+        // this is not a great idea, as they could potentially take inf time to init.
+        // We want the bot to be partially operational, even if parts fail.
+        // This is one way to make sure of that, so leave this blank.
+    }
+
+    /** Only allow one instance of the class to be in memory at a time.
+     *  This is important, because the code would crash if 2 instances were made, 
+     *  due to the CANJaguars.
+     */
+    public static Shooter getInstance() {
+        if (singleInstance == null) {
+            singleInstance = new Shooter();
+        }
+        return singleInstance;
+    }
+
+    public synchronized void stop() {
+        running = false;
+    }
+
+    public synchronized boolean start() {
+        if (!running) {
+            running = true;
+            try {
+                thread.start();
+            } catch (Exception error) {
+                System.out.println(error);
+                running = false;
+                return false;
+            }
+        }
+        // Tell the calling code that the shooter thread started correctly
+        return true;
+    }
+
+    public synchronized boolean isInitialized() {
+        return initialized;
+    }
+
+    private void init() {
+        // Don't allow shooter code to run until all 3 motors in the shooter 
+        // are properly configured
+        while (shooterA == null || shooterB == null || shooterC == null) {
+            initialized = false;
+            shooterA = initializeJaguar(shooterA, SHOOTER_A_ID);
+            shooterB = initializeJaguar(shooterB, SHOOTER_B_ID);
+            shooterC = initializeJaguar(shooterC, SHOOTER_C_ID);
+        }
+
+        initialized = true;
+    }
+    int errorThresh = 10;
+    private int[] errorCnt = {0, 0, 0};
+
+    private void incrementErrCount(int CAN_ID) {
+        switch (CAN_ID) {
+            case SHOOTER_A_ID:
+                errorCnt[0]++;
+                break;
+            case SHOOTER_B_ID:
+                errorCnt[1]++;
+                break;
+            case SHOOTER_C_ID:
+                errorCnt[2]++;
+                break;
+            default:
+                System.out.println("Non-valid Shooter CAN ID error");
+        }
+    }
+
+    private int getErrorCount(int CAN_ID) {
+        int count = 0;
+        switch (CAN_ID) {
+            case SHOOTER_A_ID:
+                count = errorCnt[0];
+                break;
+            case SHOOTER_B_ID:
+                count = errorCnt[1];
+                break;
+            case SHOOTER_C_ID:
+                count = errorCnt[2];
+                break;
+            default:
+                System.out.println("Non-valid Shooter CAN ID error");
+                count = -1;
+        }
+        return count;
+    }
+
+    private CANJaguar initializeJaguar(CANJaguar toBeInitialized, int CAN_ID) {
+
+        incrementErrCount(CAN_ID); // record how many times this jag has been reinitialized.
+        // if the count is less than the threshold, try again.
+        // otherwise, count this Jag out, and don't saturate the CAN bus trying 
+        // to reconfigure it again and again
+        if (getErrorCount(CAN_ID) < errorThresh) {
+            try {
+                if (toBeInitialized == null) {
+                    toBeInitialized = new CANJaguar(CAN_ID, CANJaguar.ControlMode.kPosition);
+                }
+
+                if (toBeInitialized.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
+                {
+                    // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
+                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPosition);
+                    toBeInitialized.setPositionReference(CANJaguar.PositionReference.kQuadEncoder);
+                    toBeInitialized.configEncoderCodesPerRev(360);
+                    // Store into RAM
+                    toBeInitialized.enableControl();
+                    //do not simplify
+                    //Now we go into operating mode: percent voltage
+                    toBeInitialized.disableControl();
+                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
+                    toBeInitialized.enableControl();
+
+                    toBeInitialized.setVoltageRampRate(0.0);
+                    toBeInitialized.configFaultTime(0.5); //0.5 second is min time.
+                }
+            } catch (Throwable e) {
+                toBeInitialized = null; // If a jaguar fails to be initialized, then set it to null, and try initializing at a later time
+                System.err.println("Jaguar Init CAN ERROR. ID: " + CAN_ID);
+                System.out.println(e);
+            }
+        }
+
+        return toBeInitialized;
+    }
+
+    public void run() {
+        init();
+        while (running && initialized) {
+            long startTime = System.currentTimeMillis();
+            velocityControl(shooter_setpoint);
+            long endTime = System.currentTimeMillis();
+
+            long dT = endTime - startTime;
+            // Try to keep execution rate at a constant 100Hz.
+            // If a thread execution takes longer, it starts the next iteration sooner
+            // or if it takes shorter, it starts later.
+            try {
+                Thread.sleep(Math.min(0, 10 - dT));//1 / (10 mS) = 100 Hz; code iterates 100 times per second
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public synchronized void setShooterSpeed(double newSetpoint) {
+        shooter_setpoint = newSetpoint;
+    }
+
+    public synchronized double getShooterSetSpeed() {
+        return shooter_setpoint;
+    }
+    private double vel = 0;
+    private final double a = 0.0;
+    private double prevT = System.currentTimeMillis();
+    private double pos = 0, prevPos = 0;
+
+    private double getEncoderRate() {
+        try {
+            prevPos = pos;
+            pos = shooterA.getPosition(); // is it ShooterA's jag that has the encoder?
+            //Probably. Will change if different
+            double time = System.currentTimeMillis();
+            double newVel = (pos - prevPos) / (((time - prevT) * (.0000166666666))); //Velocity is change in position divided by change in unit time, converted to minutes
+            prevT = time;
+
+            /* TODO Velocity filter */
+            //For now use this:
+            // Let's make a new class.
+            //Filter?
+            // Yep
+            //I have 341's moving average code that works well
+            // I am thinking of one that allows for more complicated ones
+            // FIR or IIR (FIR is a fancy moving average)
+            // We mostly want low pass filters.
+            // What is the sample rate? (how often is this method called per second?)
+            //as fast as our thread runs 100hz
+            // Okay, let's make that class.
+            vel = newVel;
+
+            //vel = vel * a + (1 - a) * newVel; // Filter algorithm. Tune a up for more filter
+            //vel = velFilt.calculate(newVel);//velFilt is a moving average filter of size 8
+            vel /= 2;						//Testing showed that output was approx 2x of actual
+            if (Math.abs(vel) < 50) {		//zero out any unusually tiny outputs
+                vel = 0;
+            }
+
+            return vel;
+        } catch (Throwable e) {
+            shooterA = initializeJaguar(shooterA, SHOOTER_A_ID);
+            System.err.println("Error in Velocity calculations");
+            System.out.println(e);
+        }
+
+        return 0.0; //Returns 0 if there was a fault in above code
+    }
+    private double error = 0;
+
+    private void velocityControl(double setpoint) {
+        double rate = getEncoderRate();
+        error = rate - setpoint;	//Calculate error
+        double output = 0.0;				//initialize output
+
+        double feedFwd;
+        feedFwd = (Math.abs(setpoint) / kV);
+        feedFwd = fromVolts(feedFwd);
+        //feedFwd *= kT;
+
+        //If the shooter is spinning slower than the setpoint, then apply full
+        // power. Else, go with the feed forward amount.
+        output = EagleMath.signum(setpoint) * ((error < 0) ? maxSpeed : feedFwd * kT);
+
+        if (rate == 0 || !isClosedLoop) {
+            //maybe scale it a bit differently once we are relying on it for speed control
+            output = feedFwd * kO;
+            if (!isClosedLoop) // if we are running in open loop mode, don't print that we are in failsafe, as the operator should be 
+            // aware of the malfunction, or has decided that they like open loop control.
+            {
+                System.err.println("Shooter velocity control in failsafe mode");
+
+                // This is a failsafe mechanism.
+                // If the encoder has failed, and is not returning any rate, this code will run.
+                // It sets the shooter speed to the feed forward value, so that the operators will still retain some measure of control
+                // Without this line, the shooter would always stay at the maxSpeed, regardless of the operator input.
+
+                // This will be called once or twice per robot execution: auton enabled and/or teleop enabled.
+                // This is because the shooter may have stopped spinning, this is fine.
+                // by the second call of this method, the  error case should be cleared.
+            }
+        }
+
+        setMotors(output);
+    }
+
+    public synchronized boolean isAtTargetSpeed() {
+        return Math.abs(error) < 200;
+    }
+
+    public synchronized void setIsClosedLoop(boolean flag) {
+        isClosedLoop = flag;
+    }
+
+    private double fromVolts(double input) {
+        return input / 12.0;
+    }
+
+    private void setMotors(double output) {
+        if (getErrorCount(SHOOTER_A_ID) < errorThresh) {
+            try {
+                shooterA.setX(output, (byte) SHOOTER_SYNC_GROUP);
+            } catch (Throwable e) {
+                shooterA = initializeJaguar(shooterA, SHOOTER_A_ID);
+                System.err.println("Shooter motor A CAN ERROR");
+                System.out.println(e);
+            }
+        }
+        if (getErrorCount(SHOOTER_B_ID) < errorThresh) {
+            try {
+                shooterB.setX(output, (byte) SHOOTER_SYNC_GROUP);
+            } catch (Throwable e) {
+                shooterB = initializeJaguar(shooterB, SHOOTER_B_ID);
+                System.err.println("Shooter motor B CAN ERROR");
+                System.out.println(e);
+            }
+        }
+        if (getErrorCount(SHOOTER_C_ID) < errorThresh) {
+            try {
+                shooterC.setX(output, (byte) SHOOTER_SYNC_GROUP);
+            } catch (Throwable e) {
+                shooterC = initializeJaguar(shooterC, SHOOTER_C_ID);
+                System.err.println("Shooter motor C CAN ERROR");
+                System.out.println(e);
+            }
+        }
+
+        try {
+            // Only update the shooter values if one (or more) of the shooter motors are active.
+            if (getErrorCount(SHOOTER_A_ID) < errorThresh
+                    || getErrorCount(SHOOTER_B_ID) < errorThresh
+                    || getErrorCount(SHOOTER_C_ID) < errorThresh) {
+                CANJaguar.updateSyncGroup((byte) SHOOTER_SYNC_GROUP);
+            }
+        } catch (Throwable e) {
+            System.err.println("Shooter Sync group CAN ERROR. Take note if this prints...");
+            System.out.println(e);
+        }
+    }
 }
