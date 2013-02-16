@@ -13,8 +13,9 @@ import org.team399.y2013.Utilities.Integrator;
  * @author Jeremy
  */
 public class DriveTrain {
+
     private Talon m_leftA, m_leftB, m_rightA, m_rightB;   //TODO: Change type to whatever speed controller we use
-    
+
     /**
      * Constructor
      * @param leftA PWM ports for motor controllers
@@ -28,17 +29,17 @@ public class DriveTrain {
         m_rightA = new Talon(rightA);
         m_rightB = new Talon(rightB);
     }
-    
+
     /**
      * Tank drive method. send signal to motor controllers to individual side
      * @param leftPWM
      * @param rightPWM 
      */
     public void tankDrive(double leftPWM, double rightPWM) {
-        if(Math.abs(leftPWM) < .2) {
+        if (Math.abs(leftPWM) < .15) {
             leftPWM = 0;
         }
-if(Math.abs(rightPWM) < .2) {
+        if (Math.abs(rightPWM) < .15) {
             rightPWM = 0;
         }
         m_leftA.set(-leftPWM);
@@ -46,19 +47,19 @@ if(Math.abs(rightPWM) < .2) {
         m_rightA.set(rightPWM);
         m_rightB.set(rightPWM);
     }
-    
+
     public void arcadeDrive(double throttle, double turn) {
         double leftOut = 0, rightOut = 0;
-        
+
         double max = Math.abs(throttle);
-        if(Math.abs(turn) > max) {
+        if (Math.abs(turn) > max) {
             max = Math.abs(turn);
         }
         double sum = throttle + turn;
         double dif = throttle - turn;
-        
-        if(throttle >= 0) {
-            if(turn >= 0) {
+
+        if (throttle >= 0) {
+            if (turn >= 0) {
                 leftOut = max;
                 rightOut = dif;
             } else {
@@ -66,7 +67,7 @@ if(Math.abs(rightPWM) < .2) {
                 rightOut = max;
             }
         } else {
-            if(turn >= 0) {
+            if (turn >= 0) {
                 leftOut = sum;
                 rightOut = -max;
             } else {
@@ -74,60 +75,55 @@ if(Math.abs(rightPWM) < .2) {
                 rightOut = dif;
             }
         }
-        
-        
+
+
         tankDrive(leftOut, rightOut);
     }
-    
-    
     Integrator throttleIntegrator = new Integrator(0);
     Integrator turnIntegrator = new Integrator(0);
-    
     double throttle = 0, turn = 0,
-           prevThrottle = 0, prevTurn = 0;
-    
-    
-    void filteredTankDrive(double left, double right) {
+            prevThrottle = 0, prevTurn = 0;
+
+    public void filteredTankDrive(double left, double right) {
         double kThrot = 0.0;
         double kTurn = 0.0;
-        
+
         prevThrottle = throttle;
         prevTurn = turn;
         throttle = twoStickToThrottle(left, right);
         turn = twoStickToTurning(left, right);
-        
-        throttleIntegrator.update(kThrot*(throttle-prevThrottle));
-        turnIntegrator.update(kTurn*(turn - prevTurn));
-        
+
+        throttleIntegrator.update(kThrot * (throttle - prevThrottle));
+        turnIntegrator.update(kTurn * (turn - prevTurn));
+
         throttle += throttleIntegrator.get();
         turn += turnIntegrator.get();
-        
-        if(throttleIntegrator.get() > 1) {
+
+        if (throttleIntegrator.get() > 1) {
             throttleIntegrator.add(-1);
-        } else if(throttleIntegrator.get() <-1) {
+        } else if (throttleIntegrator.get() < -1) {
             throttleIntegrator.add(1);
         } else {
             throttleIntegrator.reset();
         }
-        
-        if(turnIntegrator.get() > 1) {
+
+        if (turnIntegrator.get() > 1) {
             turnIntegrator.add(-1);
-        } else if(turnIntegrator.get() <-1) {
+        } else if (turnIntegrator.get() < -1) {
             turnIntegrator.add(1);
         } else {
             turnIntegrator.reset();
         }
-        
-        tankDrive(throttle+turn, throttle-turn);
-        
+
+        tankDrive(throttle + turn, throttle - turn);
+
     }
-    
-    
+
     double twoStickToTurning(double left, double right) {
-        return (left-right)/2;
+        return (left - right) / 2;
     }
-    
+
     double twoStickToThrottle(double left, double right) {
-        return (left+right)/2;
+        return (left + right) / 2;
     }
 }

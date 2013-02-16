@@ -60,6 +60,7 @@ public class Arm {
         //todo: scale input from angle to pot turns
         this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
         try {
+            //arm.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
             arm.setX(this.setpoint);
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in setpoint change");

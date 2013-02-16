@@ -40,7 +40,8 @@ public class Main extends IterativeRobot {
     Intake intake = new Intake(Constants.INTAKE_MOTOR, 
                                Constants.INTAKE_SENSOR);
     Talon winch = new Talon(Constants.WINCH_PORT);
-    Compressor comp = new Compressor(1, 1);
+    Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH, 
+                                     Constants.COMPRESSOR_RELAY);
     Shooter shooter = new Shooter();
     
     
@@ -51,7 +52,7 @@ public class Main extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-        //shooter.start();
+        shooter.start();
         comp.start();
         shooter = new Shooter();
     }
@@ -81,7 +82,6 @@ public class Main extends IterativeRobot {
             //feeder.setBelt(1.0);
             feeder.setKicker(true);
         } else {
-            
             feeder.setKicker(false);
             
         }
@@ -92,24 +92,22 @@ public class Main extends IterativeRobot {
         double shooterSet = 0.0;
         double armSet = 0;
         
-        armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
-        
-        
+        //armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
+        armSet = operatorJoy.getRawAxis(4);
         if(operatorJoy.getRawButton(1)) {
-            //shooterSet = 4000.0;
-            shooter.setMotors(-1.0);
+            shooterSet = 4000.0;
+            //shooter.setMotors(1.0);
         } else if(operatorJoy.getRawButton(2)) {
             //shooterSet = 6000.0;
-            shooter.setMotors(-.75);
+            //shooter.setMotors(.75);
         } else if(operatorJoy.getRawButton(5)) {
-            shooter.setMotors(.375);
+            //shooter.setMotors(-.375);
         } else {
-            shooter.setMotors(0);
-            //shooterSet = 0.0;
+            //shooter.setMotors(0);
+            shooterSet = 0.0;
         }
-        
         shooter.setShooterSpeed(shooterSet);
-        //arm.setPointAngle(armSet);
+        arm.setPointAngle(armSet);
+        arm.setPointAngle(armSet);
     }
-    
 }

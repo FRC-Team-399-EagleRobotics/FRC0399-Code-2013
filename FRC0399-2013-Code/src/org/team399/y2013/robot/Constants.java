@@ -14,6 +14,9 @@ public class Constants {
     public static final int DRIVER_RIGHT_USB = 2;
     public static final int OPERATOR_USB = 3;
     
+    public static final int COMPRESSOR_RELAY = 1;
+    public static final int COMPRESSOR_SWITCH = 1;
+    
     //Motor Controller ports
     public static final int DRIVE_LEFT_A  = 3;
     public static final int DRIVE_LEFT_B  = 4;

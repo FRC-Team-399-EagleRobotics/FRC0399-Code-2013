@@ -145,19 +145,13 @@ public class Shooter implements Runnable {
 
                 if (toBeInitialized.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
                 {
+                    toBeInitialized.configNeutralMode(CANJaguar.NeutralMode.kCoast);    //Coast to prevent shock loading
 //                    // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
-//                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPosition);
-//                    toBeInitialized.setPositionReference(CANJaguar.PositionReference.kQuadEncoder);
-//                    toBeInitialized.configEncoderCodesPerRev(360);
-//                    // Store into RAM
-//                    toBeInitialized.enableControl();
-                    //do not simplify
-                    //Now we go into operating mode: percent voltage
-                    //toBeInitialized.disableControl();
-                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
-                    //toBeInitialized.enableControl();
-
-                    //toBeInitialized.setVoltageRampRate(0.0);
+                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPosition); //Position mode to get encoder input
+                    toBeInitialized.setPositionReference(CANJaguar.PositionReference.kQuadEncoder); //quad encoder config'd
+                    toBeInitialized.configEncoderCodesPerRev(360);      //we use a 360 CPR encoder
+                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPercentVbus);  //back to percentVBus so we can use our own algorithm
+                    toBeInitialized.setVoltageRampRate(0.0);    //VRamp configuration, maybe no ramp at all
                     toBeInitialized.configFaultTime(0.5); //0.5 second is min time.
                 }
             } catch (Throwable e) {
@@ -263,7 +257,11 @@ public class Shooter implements Runnable {
                 // by the second call of this method, the  error case should be cleared.
             }
         }
-
+        
+        if(Math.abs(setpoint) < 50) {
+            output = 0;
+        }
+        
         setMotors(output);
     }
 
@@ -280,7 +278,8 @@ public class Shooter implements Runnable {
     }
 
     public void setMotors(double output) {
-        //if (getErrorCount(SHOOTER_A_ID) < errorThresh) {
+        output *=-1;
+        if (getErrorCount(SHOOTER_A_ID) < errorThresh) {
             try {
                 shooterA.setX(output, (byte) SHOOTER_SYNC_GROUP);
             } catch (Throwable e) {
@@ -288,8 +287,8 @@ public class Shooter implements Runnable {
                 System.err.println("Shooter motor A CAN ERROR");
                 System.out.println(e);
             }
-        //}
-        //if (getErrorCount(SHOOTER_B_ID) < errorThresh) {
+        }
+        if (getErrorCount(SHOOTER_B_ID) < errorThresh) {
             try {
                 shooterB.setX(output, (byte) SHOOTER_SYNC_GROUP);
             } catch (Throwable e) {
@@ -297,8 +296,8 @@ public class Shooter implements Runnable {
                 System.err.println("Shooter motor B CAN ERROR");
                 System.out.println(e);
             }
-        //}
-        //if (getErrorCount(SHOOTER_C_ID) < errorThresh) {
+        }
+        if (getErrorCount(SHOOTER_C_ID) < errorThresh) {
             try {
                 shooterC.setX(output, (byte) SHOOTER_SYNC_GROUP);
             } catch (Throwable e) {
@@ -306,7 +305,7 @@ public class Shooter implements Runnable {
                 System.err.println("Shooter motor C CAN ERROR");
                 System.out.println(e);
             }
-        //}
+        }
 
         try {
             // Only update the shooter values if one (or more) of the shooter motors are active.
