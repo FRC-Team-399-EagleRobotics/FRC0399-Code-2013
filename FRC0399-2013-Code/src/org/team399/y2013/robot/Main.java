@@ -11,7 +11,9 @@ package org.team399.y2013.robot;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.Timer;
 import org.team399.y2013.robot.Systems.Arm;
 import org.team399.y2013.robot.Systems.DriveTrain;
 import org.team399.y2013.robot.Systems.Feeder;
@@ -55,6 +57,8 @@ public class Main extends IterativeRobot {
         shooter.start();
         comp.start();
         shooter = new Shooter();
+        arm.setEnabled(true);
+        arm.setPointAngle(5.0);
     }
 
     /**
@@ -63,6 +67,21 @@ public class Main extends IterativeRobot {
     public void autonomousPeriodic() {
 
     }
+   
+    Solenoid solenoids[] = {new Solenoid(1), 
+        new Solenoid(2), 
+        new Solenoid(3), 
+        new Solenoid(4)};
+    
+    public void testPeriodic() {
+       for(int i = 0; i < solenoids.length; i++) {
+           solenoids[i].set(true);
+           Timer.delay(.125);
+           solenoids[i].set(false);
+           Timer.delay(.125);
+           
+       }
+    }   
 
     /**
      * This function is called periodically during operator control
@@ -92,7 +111,7 @@ public class Main extends IterativeRobot {
         double shooterSet = 0.0;
         double armSet = 0;
         
-        //armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
+        armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
         armSet = operatorJoy.getRawAxis(4);
         if(operatorJoy.getRawButton(1)) {
             shooterSet = 4000.0;
