@@ -5,7 +5,6 @@
 package org.team399.y2013.robot.Systems;
 
 import edu.wpi.first.wpilibj.*;
-import org.team399.y2013.Utilities.EagleMath;
 import org.team399.y2013.Utilities.Integrator;
 
 /**
