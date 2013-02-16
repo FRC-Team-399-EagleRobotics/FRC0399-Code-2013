@@ -34,6 +34,7 @@ public class Arm {
         int initCounter = 0;
         while (initCounter <= 10 && arm == null) {
             arm = initializeArmJaguar(arm, ARM_ID);
+            System.out.println("Arm initialized!");
             initCounter++;
         }
     }
@@ -58,9 +59,10 @@ public class Arm {
     public void setPointAngle(double setpoint) {
         //angle is relative to horizontal
         //todo: scale input from angle to pot turns
-        this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
+        //this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
+        this.setpoint = setpoint;
         try {
-            //arm.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
+            //arm.changeControlMode(CANJaguar.ControlMode.kPosition);
             arm.setX(this.setpoint);
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in setpoint change");
@@ -115,13 +117,15 @@ public class Arm {
             {
                 // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
                 armJag.changeControlMode(CANJaguar.ControlMode.kPosition);
+                armJag.enableControl();
+                
                 armJag.setPositionReference(CANJaguar.PositionReference.kPotentiometer);
                 armJag.configPotentiometerTurns(10);
 
                 //TODO configure soft limits?
 
                 armJag.setPID(ARM_P, ARM_I, ARM_D);
-                armJag.enableControl();
+                
 
 
                 armJag.setVoltageRampRate(0.0);	//Might want to play with this during testing
