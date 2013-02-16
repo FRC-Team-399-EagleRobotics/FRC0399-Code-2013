@@ -7,6 +7,7 @@ package org.team399.y2013.robot.Systems;
 import edu.wpi.first.wpilibj.AnalogChannel;
 import edu.wpi.first.wpilibj.Victor;
 import org.team399.y2013.Utilities.EagleMath;
+import org.team399.y2013.robot.Constants;
 
 /**
  *
@@ -16,7 +17,7 @@ public class Intake {
     private AnalogChannel discSensor;
     private Victor intake_motor;
     
-    private final double discThresh = 0.5;
+    private final double discThresh = Constants.INTAKE_DISC_THRESH;
     
     public Intake(int motor_port, int sensor_port) {
         discSensor = new AnalogChannel(sensor_port);

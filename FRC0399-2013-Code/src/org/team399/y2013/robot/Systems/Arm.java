@@ -119,9 +119,7 @@ public class Arm {
 
                 //TODO configure soft limits?
 
-
-                //NEED PID constants
-                armJag.setPID(ARM_P, ARM_I, ARM_D);	//not sure if right syntax
+                armJag.setPID(ARM_P, ARM_I, ARM_D);
                 armJag.enableControl();
 
 

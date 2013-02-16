@@ -35,14 +35,15 @@ public class Shooter implements Runnable {
     private Thread thread = new Thread(this);
 
     //TODO: Sort the above, refer to constants file for IDs
-    private Shooter() // make sure that only this class can make instances of Shooter
+    public Shooter() // make sure that only this class can make instances of Shooter
     {
         //what code should be in here? should we init jags in here?
         //Leave it blank.
         // if you put Jag initialization in here, then that occurs on the calling thread.
         // this is not a great idea, as they could potentially take inf time to init.
         // We want the bot to be partially operational, even if parts fail.
-        // This is one way to make sure of that, so leave this blank.
+        //This is one way to make sure of that, so leave this blank.
+        init();
     }
 
     /** Only allow one instance of the class to be in memory at a time.
@@ -82,14 +83,15 @@ public class Shooter implements Runnable {
     private void init() {
         // Don't allow shooter code to run until all 3 motors in the shooter 
         // are properly configured
-        while (shooterA == null || shooterB == null || shooterC == null) {
+        //while (shooterA == null || shooterB == null || shooterC == null) {
             initialized = false;
             shooterA = initializeJaguar(shooterA, SHOOTER_A_ID);
             shooterB = initializeJaguar(shooterB, SHOOTER_B_ID);
             shooterC = initializeJaguar(shooterC, SHOOTER_C_ID);
-        }
+        //}
 
         initialized = true;
+        System.out.println("Shooter initialized!");
     }
     int errorThresh = 10;
     private int[] errorCnt = {0, 0, 0};
@@ -138,24 +140,24 @@ public class Shooter implements Runnable {
         if (getErrorCount(CAN_ID) < errorThresh) {
             try {
                 if (toBeInitialized == null) {
-                    toBeInitialized = new CANJaguar(CAN_ID, CANJaguar.ControlMode.kPosition);
+                    toBeInitialized = new CANJaguar(CAN_ID, CANJaguar.ControlMode.kPercentVbus);
                 }
 
                 if (toBeInitialized.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
                 {
-                    // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
-                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPosition);
-                    toBeInitialized.setPositionReference(CANJaguar.PositionReference.kQuadEncoder);
-                    toBeInitialized.configEncoderCodesPerRev(360);
-                    // Store into RAM
-                    toBeInitialized.enableControl();
+//                    // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
+//                    toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPosition);
+//                    toBeInitialized.setPositionReference(CANJaguar.PositionReference.kQuadEncoder);
+//                    toBeInitialized.configEncoderCodesPerRev(360);
+//                    // Store into RAM
+//                    toBeInitialized.enableControl();
                     //do not simplify
                     //Now we go into operating mode: percent voltage
-                    toBeInitialized.disableControl();
+                    //toBeInitialized.disableControl();
                     toBeInitialized.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
-                    toBeInitialized.enableControl();
+                    //toBeInitialized.enableControl();
 
-                    toBeInitialized.setVoltageRampRate(0.0);
+                    //toBeInitialized.setVoltageRampRate(0.0);
                     toBeInitialized.configFaultTime(0.5); //0.5 second is min time.
                 }
             } catch (Throwable e) {
@@ -180,7 +182,7 @@ public class Shooter implements Runnable {
             // If a thread execution takes longer, it starts the next iteration sooner
             // or if it takes shorter, it starts later.
             try {
-                Thread.sleep(Math.min(0, 10 - dT));//1 / (10 mS) = 100 Hz; code iterates 100 times per second
+                Thread.sleep(Math.abs(Math.min(0, 10 - dT)));//1 / (10 mS) = 100 Hz; code iterates 100 times per second
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -208,24 +210,10 @@ public class Shooter implements Runnable {
             double newVel = (pos - prevPos) / (((time - prevT) * (.0000166666666))); //Velocity is change in position divided by change in unit time, converted to minutes
             prevT = time;
 
-            /* TODO Velocity filter */
-            //For now use this:
-            // Let's make a new class.
-            //Filter?
-            // Yep
-            //I have 341's moving average code that works well
-            // I am thinking of one that allows for more complicated ones
-            // FIR or IIR (FIR is a fancy moving average)
-            // We mostly want low pass filters.
-            // What is the sample rate? (how often is this method called per second?)
-            //as fast as our thread runs 100hz
-            // Okay, let's make that class.
             vel = newVel;
 
-            //vel = vel * a + (1 - a) * newVel; // Filter algorithm. Tune a up for more filter
-            //vel = velFilt.calculate(newVel);//velFilt is a moving average filter of size 8
-            vel /= 2;						//Testing showed that output was approx 2x of actual
-            if (Math.abs(vel) < 50) {		//zero out any unusually tiny outputs
+            vel /= 2;			//Testing showed that output was approx 2x of actual
+            if (Math.abs(vel) < 50) {	//zero out any unusually tiny outputs
                 vel = 0;
             }
 
@@ -244,6 +232,9 @@ public class Shooter implements Runnable {
         double rate = getEncoderRate();
         error = rate - setpoint;	//Calculate error
         double output = 0.0;				//initialize output
+        System.out.println("Setpoint: " + setpoint);
+        System.out.println("Rate:     " + rate);
+        System.out.println("Error:    " + error);
 
         double feedFwd;
         feedFwd = (Math.abs(setpoint) / kV);
@@ -288,8 +279,8 @@ public class Shooter implements Runnable {
         return input / 12.0;
     }
 
-    private void setMotors(double output) {
-        if (getErrorCount(SHOOTER_A_ID) < errorThresh) {
+    public void setMotors(double output) {
+        //if (getErrorCount(SHOOTER_A_ID) < errorThresh) {
             try {
                 shooterA.setX(output, (byte) SHOOTER_SYNC_GROUP);
             } catch (Throwable e) {
@@ -297,8 +288,8 @@ public class Shooter implements Runnable {
                 System.err.println("Shooter motor A CAN ERROR");
                 System.out.println(e);
             }
-        }
-        if (getErrorCount(SHOOTER_B_ID) < errorThresh) {
+        //}
+        //if (getErrorCount(SHOOTER_B_ID) < errorThresh) {
             try {
                 shooterB.setX(output, (byte) SHOOTER_SYNC_GROUP);
             } catch (Throwable e) {
@@ -306,8 +297,8 @@ public class Shooter implements Runnable {
                 System.err.println("Shooter motor B CAN ERROR");
                 System.out.println(e);
             }
-        }
-        if (getErrorCount(SHOOTER_C_ID) < errorThresh) {
+        //}
+        //if (getErrorCount(SHOOTER_C_ID) < errorThresh) {
             try {
                 shooterC.setX(output, (byte) SHOOTER_SYNC_GROUP);
             } catch (Throwable e) {
@@ -315,7 +306,7 @@ public class Shooter implements Runnable {
                 System.err.println("Shooter motor C CAN ERROR");
                 System.out.println(e);
             }
-        }
+        //}
 
         try {
             // Only update the shooter values if one (or more) of the shooter motors are active.

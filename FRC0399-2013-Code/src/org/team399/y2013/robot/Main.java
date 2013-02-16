@@ -8,8 +8,10 @@
 package org.team399.y2013.robot;
 
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Talon;
 import org.team399.y2013.robot.Systems.Arm;
 import org.team399.y2013.robot.Systems.DriveTrain;
 import org.team399.y2013.robot.Systems.Feeder;
@@ -24,7 +26,8 @@ import org.team399.y2013.robot.Systems.Shooter;
  * directory.
  */
 public class Main extends IterativeRobot {
-    Joystick driverJoy = new Joystick(Constants.DRIVER_USB);
+    Joystick leftJoy = new Joystick(Constants.DRIVER_LEFT_USB);
+    Joystick rightJoy = new Joystick(Constants.DRIVER_RIGHT_USB);
     Joystick operatorJoy = new Joystick(Constants.OPERATOR_USB);
     
     Arm arm = Arm.getInstance();
@@ -36,7 +39,9 @@ public class Main extends IterativeRobot {
                                Constants.KICKER_PORT);
     Intake intake = new Intake(Constants.INTAKE_MOTOR, 
                                Constants.INTAKE_SENSOR);
-    Shooter shooter = Shooter.getInstance();
+    Talon winch = new Talon(Constants.WINCH_PORT);
+    Compressor comp = new Compressor(1, 1);
+    Shooter shooter = new Shooter();
     
     
     
@@ -46,7 +51,9 @@ public class Main extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-        shooter.start();
+        //shooter.start();
+        comp.start();
+        shooter = new Shooter();
     }
 
     /**
@@ -60,21 +67,49 @@ public class Main extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
+        double multiplier = 1.0;
         
+        
+        if(leftJoy.getRawButton(6)) {
+            winch.set(rightJoy.getRawAxis(2));
+        } else {
+            winch.set(0);
+            drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
+        }
+        feeder.setBelt(operatorJoy.getRawAxis(2));
+        if(operatorJoy.getRawButton(6)) {
+            //feeder.setBelt(1.0);
+            feeder.setKicker(true);
+        } else {
+            
+            feeder.setKicker(false);
+            
+        }
+        operator();
     }
     
     public void operator() {
         double shooterSet = 0.0;
-        arm.setPointAngle(arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR));
+        double armSet = 0;
+        
+        armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
+        
+        
         if(operatorJoy.getRawButton(1)) {
-            shooterSet = 4000.0;
+            //shooterSet = 4000.0;
+            shooter.setMotors(-1.0);
         } else if(operatorJoy.getRawButton(2)) {
-            shooterSet = 6000.0;
+            //shooterSet = 6000.0;
+            shooter.setMotors(-.75);
+        } else if(operatorJoy.getRawButton(5)) {
+            shooter.setMotors(.375);
         } else {
-            shooterSet = 0.0;
+            shooter.setMotors(0);
+            //shooterSet = 0.0;
         }
         
         shooter.setShooterSpeed(shooterSet);
+        //arm.setPointAngle(armSet);
     }
     
 }

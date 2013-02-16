@@ -35,10 +35,14 @@ public class DriveTrain {
      * @param rightPWM 
      */
     public void tankDrive(double leftPWM, double rightPWM) {
-        leftPWM = (Math.abs(leftPWM) > 1.0) ? 1.0*EagleMath.signum(leftPWM) : leftPWM;      //Clamps inputs to +- 1.0
-        rightPWM = (Math.abs(rightPWM) > 1.0) ? 1.0*EagleMath.signum(rightPWM) : rightPWM;
-        m_leftA.set(leftPWM);
-        m_leftB.set(leftPWM);
+        if(Math.abs(leftPWM) < .2) {
+            leftPWM = 0;
+        }
+if(Math.abs(rightPWM) < .2) {
+            rightPWM = 0;
+        }
+        m_leftA.set(-leftPWM);
+        m_leftB.set(-leftPWM);
         m_rightA.set(rightPWM);
         m_rightB.set(rightPWM);
     }

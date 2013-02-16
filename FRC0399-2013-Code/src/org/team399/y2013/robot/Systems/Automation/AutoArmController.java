@@ -28,15 +28,15 @@ public class AutoArmController {
     }
     
     public void run() {
-        if(intake.isDiscPresent() && !EagleMath.isInBand(arm.getActual(), 
-                                     Arm.ArmSetpoints.INTAKE_LOAD - .05, 
-                                     Arm.ArmSetpoints.INTAKE_LOAD + .05)) { 
-            intakeSet = 0.0;
-        } else {
-            
-        }
-        
-        intake.set(intakeSet);
+//        if(intake.isDiscPresent() && !EagleMath.isInBand(arm.getActual(), 
+//                                     Arm.ArmSetpoints.INTAKE_LOAD - .05, 
+//                                     Arm.ArmSetpoints.INTAKE_LOAD + .05)) { 
+//            intakeSet = 0.0;
+//        } else {
+//            
+//        }
+//        
+//        intake.set(intakeSet);
     }
      
     public void setIntake(double in) {
