@@ -226,9 +226,9 @@ public class Shooter implements Runnable {
         double rate = getEncoderRate();
         error = rate - setpoint;	//Calculate error
         double output = 0.0;				//initialize output
-//        System.out.println("Setpoint: " + setpoint);
-//        System.out.println("Rate:     " + rate);
-//        System.out.println("Error:    " + error);
+        System.out.println("Setpoint: " + setpoint);
+        System.out.println("Rate:     " + rate);
+        System.out.println("Error:    " + error);
 
         double feedFwd;
         feedFwd = (Math.abs(setpoint) / kV);

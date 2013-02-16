@@ -46,8 +46,8 @@ public class Constants {
     
     public static final int ARM_ID = 5;
     
-    public static final double ARM_P = 75.0;
-    public static final double ARM_I = 10.0;
+    public static final double ARM_P = 0.0;
+    public static final double ARM_I = 0.0;
     public static final double ARM_D = 0.0;
     public static final double ARM_LOWER_LIM = 0.0;
     public static final double ARM_UPPER_LIM = 0.0;
