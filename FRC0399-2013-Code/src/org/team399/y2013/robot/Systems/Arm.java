@@ -18,7 +18,7 @@ public class Arm {
     //Todo: move constants into constants class.
     //Todo: look into SDB for constants editing
     private double ARM_P = Constants.ARM_P, ARM_I = Constants.ARM_I, ARM_D = Constants.ARM_D;
-    private double setpoint;
+    private double setpoint = 5.18;
     private boolean enabled = false;
     private int ARM_ID = Constants.ARM_ID;
     private static Arm instance = null;
@@ -37,6 +37,7 @@ public class Arm {
             System.out.println("Arm initialized!");
             initCounter++;
         }
+        setpoint = Constants.STOW_UP;
     }
 
     public double getSetpoint() {
@@ -57,12 +58,14 @@ public class Arm {
     }
 
     public void setPointAngle(double setpoint) {
+        if(setpoint < 0) setpoint = 0;
+        if(setpoint > 10) setpoint = 10;
         //angle is relative to horizontal
         //todo: scale input from angle to pot turns
         //this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
         this.setpoint = setpoint;
         try {
-            //arm.changeControlMode(CANJaguar.ControlMode.kPosition);
+    //        arm.changeControlMode(CANJaguar.ControlMode.kPosition);
             arm.setX(this.setpoint);
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in setpoint change");
@@ -117,19 +120,22 @@ public class Arm {
             {
                 // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
                 armJag.changeControlMode(CANJaguar.ControlMode.kPosition);
-                armJag.enableControl();
+                //armJag.enableControl();
                 
                 armJag.setPositionReference(CANJaguar.PositionReference.kPotentiometer);
                 armJag.configPotentiometerTurns(10);
 
-                //TODO configure soft limits?
-
                 armJag.setPID(ARM_P, ARM_I, ARM_D);
                 
+                //armJag.configSoftPositionLimits(Constants.ARM_LOWER_LIM, Constants.ARM_UPPER_LIM);
+                //todo tune limits and constants
 
+                //armJag.disableControl();
+                armJag.configMaxOutputVoltage(12.0);
 
                 armJag.setVoltageRampRate(0.0);	//Might want to play with this during testing
                 armJag.configFaultTime(0.5); //0.5 second is min time.
+                armJag.enableControl();
             }
         } catch (Throwable e) {
             armJag = null; // If a jaguar fails to be initialized, then set it to null, and try initializing at a later time

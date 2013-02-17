@@ -15,8 +15,8 @@ public class Shooter implements Runnable {
     final double maxSpeed = 1;	//Max shooter output value
     final double kV = Constants.SHOOTER_KV * Constants.SHOOTER_GEAR_RATIO;
     //kV by motor:
-    //CIM   = 443 RPM/V
-    //RS550 = 1608 RPM/V
+    //CIM      = 443 RPM/V
+    //RS550    = 1608 RPM/V
     //Mini-CIM = 525 RPM/V
     final double kT = Constants.SHOOTER_KT; 	//Tuning constant for closed loop velocity control
     final double kO = Constants.SHOOTER_KO;  //Tuning constant for open loop failsafe mode control
@@ -37,18 +37,14 @@ public class Shooter implements Runnable {
     //TODO: Sort the above, refer to constants file for IDs
     public Shooter() // make sure that only this class can make instances of Shooter
     {
-        //what code should be in here? should we init jags in here?
-        //Leave it blank.
-        // if you put Jag initialization in here, then that occurs on the calling thread.
-        // this is not a great idea, as they could potentially take inf time to init.
-        // We want the bot to be partially operational, even if parts fail.
-        //This is one way to make sure of that, so leave this blank.
-        init();
+        //LEAVE THIS BLANK FOR THREADED OPERATION
     }
 
-    /** Only allow one instance of the class to be in memory at a time.
-     *  This is important, because the code would crash if 2 instances were made, 
-     *  due to the CANJaguars.
+    /** 
+     * Only allow one instance of the class to be in memory at a time.
+     * This is important, because the code would crash if 2 instances were made, 
+     * due to the CANJaguars.
+     * @returns an instance of the shooter object
      */
     public static Shooter getInstance() {
         if (singleInstance == null) {
@@ -57,10 +53,17 @@ public class Shooter implements Runnable {
         return singleInstance;
     }
 
+    /**
+     * Stop running thread
+     */
     public synchronized void stop() {
         running = false;
     }
 
+    /**
+     * Start running thread
+     * @return flag indicating a successful start
+     */
     public synchronized boolean start() {
         if (!running) {
             running = true;
@@ -76,20 +79,28 @@ public class Shooter implements Runnable {
         return true;
     }
 
+    /**
+     * 
+     * @return a flag indicating a successful initialization
+     */
     public synchronized boolean isInitialized() {
         return initialized;
     }
 
+    /**
+     * initialize the shooter thread
+     */
     private void init() {
         // Don't allow shooter code to run until all 3 motors in the shooter 
         // are properly configured
-        //while (shooterA == null || shooterB == null || shooterC == null) {
+        while (shooterA == null || shooterB == null || shooterC == null) {
             initialized = false;
             shooterA = initializeJaguar(shooterA, SHOOTER_A_ID);
             shooterB = initializeJaguar(shooterB, SHOOTER_B_ID);
             shooterC = initializeJaguar(shooterC, SHOOTER_C_ID);
-        //}
+        }
 
+         
         initialized = true;
         System.out.println("Shooter initialized!");
     }
@@ -237,7 +248,7 @@ public class Shooter implements Runnable {
 
         //If the shooter is spinning slower than the setpoint, then apply full
         // power. Else, go with the feed forward amount.
-        output = EagleMath.signum(setpoint) * ((error < 0) ? maxSpeed : feedFwd * kT);
+        output = 1 * ((error < 0) ? maxSpeed : feedFwd * kT);
 
         if (rate == 0 || !isClosedLoop) {
             //maybe scale it a bit differently once we are relying on it for speed control

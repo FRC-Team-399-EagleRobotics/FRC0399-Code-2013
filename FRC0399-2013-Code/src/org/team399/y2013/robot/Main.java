@@ -44,7 +44,7 @@ public class Main extends IterativeRobot {
     Talon winch = new Talon(Constants.WINCH_PORT);
     Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH, 
                                      Constants.COMPRESSOR_RELAY);
-    Shooter shooter = new Shooter();
+    Shooter shooter = Shooter.getInstance();
     
     
     
@@ -56,9 +56,8 @@ public class Main extends IterativeRobot {
     public void robotInit() {
         shooter.start();
         comp.start();
-        shooter = new Shooter();
         arm.setEnabled(true);
-        arm.setPointAngle(5.0);
+        
     }
 
     /**
@@ -68,19 +67,9 @@ public class Main extends IterativeRobot {
 
     }
    
-    Solenoid solenoids[] = {new Solenoid(1), 
-        new Solenoid(2), 
-        new Solenoid(3), 
-        new Solenoid(4)};
-    
-    public void testPeriodic() {
-       for(int i = 0; i < solenoids.length; i++) {
-           solenoids[i].set(true);
-           Timer.delay(.125);
-           solenoids[i].set(false);
-           Timer.delay(.125);
-           
-       }
+    public void disabledPeriodic() {
+        System.out.println("Arm Actual: " + arm.getActual());
+        arm.setPointAngle(5.18);
     }   
 
     /**
@@ -96,12 +85,19 @@ public class Main extends IterativeRobot {
             winch.set(0);
             drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
         }
-        feeder.setBelt(operatorJoy.getRawAxis(2));
+        //feeder.setBelt(operatorJoy.getRawAxis(4));
+        if(operatorJoy.getRawButton(5)) {
+            feeder.setBelt(1.0);
+        } else if(operatorJoy.getRawButton(7)) {
+            feeder.setBelt(-1.0);
+        } else {
+            feeder.setBelt(0);
+        }
         if(operatorJoy.getRawButton(6)) {
             //feeder.setBelt(1.0);
-            feeder.setKicker(true);
-        } else {
             feeder.setKicker(false);
+        } else {
+            feeder.setKicker(true);
             
         }
         operator();
@@ -109,24 +105,31 @@ public class Main extends IterativeRobot {
     
     public void operator() {
         double shooterSet = 0.0;
-        double armSet = 0;
+        double armSet = 5.18;
         
         armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
-        armSet = operatorJoy.getRawAxis(4);
+        //armSet = operatorJoy.getRawAxis(4);
+        System.out.println("Arm Actual: " + arm.getActual());
+        System.out.println("Arm Set: " + arm.getSetpoint());
         if(operatorJoy.getRawButton(1)) {
             shooterSet = 4000.0;
             //shooter.setMotors(1.0);
+        //    armSet = 5.18;
         } else if(operatorJoy.getRawButton(2)) {
-            //shooterSet = 6000.0;
+            shooterSet = 6000.0;
             //shooter.setMotors(.75);
-        } else if(operatorJoy.getRawButton(5)) {
+            //armSet = Constants.HUMAN_LOAD;
+        } else if(operatorJoy.getRawButton(3)) {
+            shooterSet = (Math.abs(operatorJoy.getRawAxis(4)) * 8600);
+            //shooter.setMotors(-.375);
+        } else if(operatorJoy.getRawButton(4)) {
+            shooterSet = -1500;
             //shooter.setMotors(-.375);
         } else {
             //shooter.setMotors(0);
             shooterSet = 0.0;
         }
         shooter.setShooterSpeed(shooterSet);
-        arm.setPointAngle(armSet);
         arm.setPointAngle(armSet);
     }
 }
