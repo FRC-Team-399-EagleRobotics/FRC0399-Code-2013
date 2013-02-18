@@ -60,6 +60,8 @@ public class Arm {
     public void setPointAngle(double setpoint) {
         if(setpoint < 0) setpoint = 0;
         if(setpoint > 10) setpoint = 10;
+        if(setpoint < Constants.ARM_LOWER_LIM) setpoint = Constants.ARM_LOWER_LIM;
+        if(setpoint > Constants.ARM_UPPER_LIM) setpoint = Constants.ARM_UPPER_LIM;
         //angle is relative to horizontal
         //todo: scale input from angle to pot turns
         //this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
@@ -127,11 +129,11 @@ public class Arm {
 
                 armJag.setPID(ARM_P, ARM_I, ARM_D);
                 
-                //armJag.configSoftPositionLimits(Constants.ARM_LOWER_LIM, Constants.ARM_UPPER_LIM);
+                armJag.configSoftPositionLimits(Constants.ARM_UPPER_LIM, Constants.ARM_LOWER_LIM);
                 //todo tune limits and constants
 
                 //armJag.disableControl();
-                armJag.configMaxOutputVoltage(12.0);
+                //armJag.configMaxOutputVoltage(12.0);
 
                 armJag.setVoltageRampRate(0.0);	//Might want to play with this during testing
                 armJag.configFaultTime(0.5); //0.5 second is min time.

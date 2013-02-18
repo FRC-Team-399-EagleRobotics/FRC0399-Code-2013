@@ -8,12 +8,8 @@
 package org.team399.y2013.robot;
 
 
-import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.Talon;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.*;
+import org.team399.y2013.Utilities.EagleMath;
 import org.team399.y2013.robot.Systems.Arm;
 import org.team399.y2013.robot.Systems.DriveTrain;
 import org.team399.y2013.robot.Systems.Feeder;
@@ -68,14 +64,20 @@ public class Main extends IterativeRobot {
     }
    
     public void disabledPeriodic() {
-        System.out.println("Arm Actual: " + arm.getActual());
         arm.setPointAngle(5.18);
     }   
 
+    Solenoid shifterA = new Solenoid(2);
+    Solenoid shifterB = new Solenoid(3);
+    Solenoid sol3 = new Solenoid(4);
+    
     /**
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
+        sol3.set(true);
+        shifterA.set(!rightJoy.getRawButton(1));
+        shifterB.set(rightJoy.getRawButton(1));
         double multiplier = 1.0;
         
         
@@ -84,6 +86,7 @@ public class Main extends IterativeRobot {
         } else {
             winch.set(0);
             drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
+            //drive.filteredTankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
         }
         //feeder.setBelt(operatorJoy.getRawAxis(4));
         if(operatorJoy.getRawButton(5)) {
@@ -102,12 +105,17 @@ public class Main extends IterativeRobot {
         }
         operator();
     }
-    
+    double armSet = 5.18;
     public void operator() {
         double shooterSet = 0.0;
-        double armSet = 5.18;
         
-        armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
+        
+        //armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
+        if(Math.abs(operatorJoy.getRawAxis(2)) > .5) {
+            armSet = arm.getSetpoint() + Constants.ARM_MANUAL_INPUT_SCALAR*EagleMath.signum(operatorJoy.getRawAxis(2));
+        } else if(EagleMath.isInBand(Math.abs((float)operatorJoy.getRawAxis(2)), (float).125, (float).499)) {
+            armSet = arm.getSetpoint() + (Constants.ARM_MANUAL_INPUT_SCALAR*.5)*EagleMath.signum(operatorJoy.getRawAxis(2));
+        }
         //armSet = operatorJoy.getRawAxis(4);
         System.out.println("Arm Actual: " + arm.getActual());
         System.out.println("Arm Set: " + arm.getSetpoint());
@@ -123,7 +131,7 @@ public class Main extends IterativeRobot {
             shooterSet = (Math.abs(operatorJoy.getRawAxis(4)) * 8600);
             //shooter.setMotors(-.375);
         } else if(operatorJoy.getRawButton(4)) {
-            shooterSet = -1500;
+            shooterSet = -1000;
             //shooter.setMotors(-.375);
         } else {
             //shooter.setMotors(0);

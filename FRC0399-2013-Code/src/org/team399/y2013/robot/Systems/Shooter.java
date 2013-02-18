@@ -2,6 +2,7 @@ package org.team399.y2013.robot.Systems;
 
 import edu.wpi.first.wpilibj.*;
 import org.team399.y2013.Utilities.EagleMath;
+import org.team399.y2013.Utilities.MovingAverage;
 import org.team399.y2013.robot.Constants;
 
 /**
@@ -193,6 +194,25 @@ public class Shooter implements Runnable {
             }
         }
     }
+    public synchronized double getLeftDriveEncoder() {
+        double answer = -1;
+        try {
+            answer = shooterB.getPosition();
+        } catch(Throwable t) {
+            shooterB = this.initializeJaguar(shooterB, SHOOTER_B_ID);
+        }
+        return answer;
+    }
+    
+    public synchronized double getRightDriveEncoder() {
+        double answer = -1;
+        try {
+            answer = shooterC.getPosition();
+        } catch(Throwable t) {
+            shooterC = this.initializeJaguar(shooterC, SHOOTER_C_ID);
+        }
+        return answer;
+    }
 
     public synchronized void setShooterSpeed(double newSetpoint) {
         shooter_setpoint = newSetpoint;
@@ -205,22 +225,24 @@ public class Shooter implements Runnable {
     private final double a = 0.0;
     private double prevT = System.currentTimeMillis();
     private double pos = 0, prevPos = 0;
-
+MovingAverage velFilt = new MovingAverage(8);
     private double getEncoderRate() {
         try {
             prevPos = pos;
             pos = shooterA.getPosition(); // is it ShooterA's jag that has the encoder?
+            System.out.println("ShooterEncoderPosition: " + pos);
             //Probably. Will change if different
             double time = System.currentTimeMillis();
             double newVel = (pos - prevPos) / (((time - prevT) * (.0000166666666))); //Velocity is change in position divided by change in unit time, converted to minutes
             prevT = time;
 
-            vel = newVel;
+            vel = velFilt.calculate(newVel);
 
-            vel /= 2;			//Testing showed that output was approx 2x of actual
+            //vel /= 2;			//Testing showed that output was approx 2x of actual
             if (Math.abs(vel) < 50) {	//zero out any unusually tiny outputs
                 vel = 0;
             }
+            vel *= -2;
 
             return vel;
         } catch (Throwable e) {
@@ -233,13 +255,14 @@ public class Shooter implements Runnable {
     }
     private double error = 0;
 
+    
     private void velocityControl(double setpoint) {
         double rate = getEncoderRate();
         error = rate - setpoint;	//Calculate error
         double output = 0.0;				//initialize output
-//        System.out.println("Setpoint: " + setpoint);
-//        System.out.println("Rate:     " + rate);
-//        System.out.println("Error:    " + error);
+        //System.out.println("Setpoint: " + setpoint);
+        //System.out.println("Rate:     " + rate);
+        System.out.println("Error:    " + error);
 
         double feedFwd;
         feedFwd = (Math.abs(setpoint) / kV);
@@ -248,9 +271,21 @@ public class Shooter implements Runnable {
 
         //If the shooter is spinning slower than the setpoint, then apply full
         // power. Else, go with the feed forward amount.
-        output = 1 * ((error < 0) ? maxSpeed : feedFwd * kT);
+        double speedScalar = 1;
+        if(Math.abs(setpoint) < 2000) {
+            speedScalar = .3;
+        }
+        
+        if(EagleMath.signum(setpoint) > 0) {
+            output = ((error < 0) ? maxSpeed*speedScalar : feedFwd * kT);
+        } else {
+            output = ((error > 0) ? -maxSpeed*speedScalar : -feedFwd * kT);
+        }
+        
 
+        
         if (rate == 0 || !isClosedLoop) {
+            System.out.println("Shooter in open loop/feed fwd mode");
             //maybe scale it a bit differently once we are relying on it for speed control
             output = feedFwd * kO;
             if (!isClosedLoop) // if we are running in open loop mode, don't print that we are in failsafe, as the operator should be 

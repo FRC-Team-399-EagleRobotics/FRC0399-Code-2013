@@ -28,6 +28,8 @@ public class DriveTrain {
         m_leftB = new Talon(leftB);
         m_rightA = new Talon(rightA);
         m_rightB = new Talon(rightB);
+        throttleIntegrator.reset();
+        turnIntegrator.reset();
     }
 
     /**
@@ -85,8 +87,8 @@ public class DriveTrain {
             prevThrottle = 0, prevTurn = 0;
 
     public void filteredTankDrive(double left, double right) {
-        double kThrot = 0.0;
-        double kTurn = 0.0;
+        double kThrot = 0.0075;
+        double kTurn = 0.0075 ;
 
         prevThrottle = throttle;
         prevTurn = turn;
