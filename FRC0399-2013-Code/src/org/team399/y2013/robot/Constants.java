@@ -46,21 +46,21 @@ public class Constants {
     
     public static final int ARM_ID = 5;
     
-    public static final double ARM_P = 500;
-    public static final double ARM_I = .0;
+    public static final double ARM_P = 600;
+    public static final double ARM_I = .0010;
     public static final double ARM_D = 0.0;
     public static final double ARM_LOWER_LIM = 4.6;
     public static final double ARM_UPPER_LIM = 6.7;
-    public static final double ARM_MANUAL_INPUT_SCALAR = .05;
+    public static final double ARM_MANUAL_INPUT_SCALAR = .075;
     
     
     public static double STOW_UP     = 5.28;
     public static double INTAKE_LOAD = 0.0;
-    public static double HUMAN_LOAD  = 6.05;
-    public static double HIGH_SHOT   = 0.0;
+    public static double HUMAN_LOAD  = 5.9041900634765625;
+    public static double HIGH_SHOT   = 5.7086944580078125;
     public static double MID_SHOT    = 0.0;
     public static double LOW_SHOT    = 0.0;
-    public static double STOW_DOWN   = 0.0;
+    public static double STOW_DOWN   = ARM_LOWER_LIM;
     
     
     

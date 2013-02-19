@@ -19,8 +19,8 @@ public class Shooter implements Runnable {
     //CIM      = 443 RPM/V
     //RS550    = 1608 RPM/V
     //Mini-CIM = 525 RPM/V
-    final double kT = Constants.SHOOTER_KT; 	//Tuning constant for closed loop velocity control
-    final double kO = Constants.SHOOTER_KO;  //Tuning constant for open loop failsafe mode control
+    double kT = Constants.SHOOTER_KT; 	//Tuning constant for closed loop velocity control
+    double kO = Constants.SHOOTER_KO;  //Tuning constant for open loop failsafe mode control
     final byte SHOOTER_SYNC_GROUP = Constants.SHOOTER_SYNC_GROUP;
     final int SHOOTER_A_ID = Constants.SHOOTER_A_ID;
     final int SHOOTER_B_ID = Constants.SHOOTER_B_ID;
@@ -34,6 +34,7 @@ public class Shooter implements Runnable {
     private boolean initialized = false;
     private static Shooter singleInstance = null;
     private Thread thread = new Thread(this);
+    private double velocity = 0.0;
 
     //TODO: Sort the above, refer to constants file for IDs
     public Shooter() // make sure that only this class can make instances of Shooter
@@ -107,6 +108,10 @@ public class Shooter implements Runnable {
     }
     int errorThresh = 10;
     private int[] errorCnt = {0, 0, 0};
+    
+    public synchronized double getVelocity() {
+        return velocity;
+    }
 
     private void incrementErrCount(int CAN_ID) {
         switch (CAN_ID) {
@@ -182,7 +187,7 @@ public class Shooter implements Runnable {
             long startTime = System.currentTimeMillis();
             velocityControl(shooter_setpoint);
             long endTime = System.currentTimeMillis();
-
+            
             long dT = endTime - startTime;
             // Try to keep execution rate at a constant 100Hz.
             // If a thread execution takes longer, it starts the next iteration sooner
@@ -230,7 +235,7 @@ MovingAverage velFilt = new MovingAverage(8);
         try {
             prevPos = pos;
             pos = shooterA.getPosition(); // is it ShooterA's jag that has the encoder?
-            System.out.println("ShooterEncoderPosition: " + pos);
+            //System.out.println("ShooterEncoderPosition: " + pos);
             //Probably. Will change if different
             double time = System.currentTimeMillis();
             double newVel = (pos - prevPos) / (((time - prevT) * (.0000166666666))); //Velocity is change in position divided by change in unit time, converted to minutes
@@ -243,7 +248,7 @@ MovingAverage velFilt = new MovingAverage(8);
                 vel = 0;
             }
             vel *= -2;
-
+            velocity = vel;
             return vel;
         } catch (Throwable e) {
             shooterA = initializeJaguar(shooterA, SHOOTER_A_ID);
@@ -256,13 +261,18 @@ MovingAverage velFilt = new MovingAverage(8);
     private double error = 0;
 
     
+    public synchronized void setTuningConstants(double kT, double kO) {
+        this.kT = kT;
+        this.kO = kO;
+    }
     private void velocityControl(double setpoint) {
         double rate = getEncoderRate();
+        velocity = rate;
         error = rate - setpoint;	//Calculate error
         double output = 0.0;				//initialize output
         //System.out.println("Setpoint: " + setpoint);
         //System.out.println("Rate:     " + rate);
-        System.out.println("Error:    " + error);
+        //System.out.println("Error:    " + error);
 
         double feedFwd;
         feedFwd = (Math.abs(setpoint) / kV);
@@ -276,7 +286,7 @@ MovingAverage velFilt = new MovingAverage(8);
             speedScalar = .3;
         }
         
-        if(EagleMath.signum(setpoint) > 0) {
+        if(EagleMath.signum(setpoint) < 0) {
             output = ((error < 0) ? maxSpeed*speedScalar : feedFwd * kT);
         } else {
             output = ((error > 0) ? -maxSpeed*speedScalar : -feedFwd * kT);
@@ -285,7 +295,7 @@ MovingAverage velFilt = new MovingAverage(8);
 
         
         if (rate == 0 || !isClosedLoop) {
-            System.out.println("Shooter in open loop/feed fwd mode");
+          //  System.out.println("Shooter in open loop/feed fwd mode");
             //maybe scale it a bit differently once we are relying on it for speed control
             output = feedFwd * kO;
             if (!isClosedLoop) // if we are running in open loop mode, don't print that we are in failsafe, as the operator should be 
@@ -308,7 +318,9 @@ MovingAverage velFilt = new MovingAverage(8);
             output = 0;
         }
         
-        setMotors(output);
+        
+        
+        setMotors(output*EagleMath.signum(setpoint));
     }
 
     public synchronized boolean isAtTargetSpeed() {

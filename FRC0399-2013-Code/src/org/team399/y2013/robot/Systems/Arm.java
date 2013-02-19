@@ -97,9 +97,9 @@ public class Arm {
         try {
             if (enabled) {
                 arm.setPID(ARM_P, ARM_I, ARM_D);    //not sure if right syntax
-                arm.enableControl();
+                //arm.enableControl();
             } else {
-                arm.disableControl();
+                //arm.disableControl();
             }
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in Enabling");

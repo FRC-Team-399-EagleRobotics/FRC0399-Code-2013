@@ -4,6 +4,7 @@
  */
 package org.team399.y2013.robot.Systems;
 
+import com.sun.squawk.util.MathUtils;
 import edu.wpi.first.wpilibj.*;
 import org.team399.y2013.Utilities.EagleMath;
 import org.team399.y2013.Utilities.Integrator;
@@ -128,4 +129,70 @@ public class DriveTrain {
     double twoStickToThrottle(double left, double right) {
         return (left + right) / 2;
     }
+    
+        // Cheesy Drive - Thanks to Austin Schuh and Teams 254/971. Yeah Buddy!
+    // It would not be possible to control a fast drive without this
+    public void cheesyDrive(double throttle, double wheel, boolean quickTurn) {
+
+        double angular_power = 0.0;
+        double overPower = 0.0;
+        double sensitivity = 1.7;
+        double rPower = 0.0;
+        double lPower = 0.0;
+
+        if(quickTurn) {
+            overPower = 1.0;
+            sensitivity = 1.0;
+            angular_power = wheel;
+        }
+        else {
+            overPower = 0.0;
+            angular_power = Math.abs(throttle) * wheel * sensitivity;
+        }
+
+        rPower = lPower = throttle;
+        lPower += angular_power;
+        rPower -= angular_power;
+
+        if(lPower > 1.0) {
+            rPower -= overPower * (lPower - 1.0);
+            lPower = 1.0;
+        }
+        else if(rPower > 1.0) {
+            lPower -= overPower * (rPower - 1.0);
+            rPower = 1.0;
+        }
+        else if(lPower < -1.0) {
+            rPower += overPower * (-1.0 - lPower);
+            lPower = -1.0;
+        }
+        else if(rPower < -1.0) {
+            lPower += overPower * (-1.0 - rPower);
+            rPower = -1.0;
+        }
+
+        tankDrive(lPower, rPower);
+    }
+
+    
+    public boolean moveDist(double dist, double actL, double actR) {
+        double errorThresh = .25;
+        double errorL = actL - dist;
+        double errorR = actR - dist;
+        tankDrive(distanceControl(errorL), distanceControl(errorR));
+        
+        System.out.println("Drive error L: " + errorL);
+        System.out.println("Drive error R: " + errorR);
+        
+        return Math.abs(errorL) < errorThresh && (Math.abs(errorL) < errorThresh);
+        
+    }
+    
+    final double maxSpeed = .75;
+    final double distAttenuation = 0.8;
+    
+    private double distanceControl(double distance){
+        return maxSpeed*(1- MathUtils.pow(Math.E, -distAttenuation*distance));
+    }
 }
+

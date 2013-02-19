@@ -15,6 +15,8 @@ import org.team399.y2013.robot.Systems.DriveTrain;
 import org.team399.y2013.robot.Systems.Feeder;
 import org.team399.y2013.robot.Systems.Intake;
 import org.team399.y2013.robot.Systems.Shooter;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.team399.y2013.Utilities.GamePad;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -26,7 +28,7 @@ import org.team399.y2013.robot.Systems.Shooter;
 public class Main extends IterativeRobot {
     Joystick leftJoy = new Joystick(Constants.DRIVER_LEFT_USB);
     Joystick rightJoy = new Joystick(Constants.DRIVER_RIGHT_USB);
-    Joystick operatorJoy = new Joystick(Constants.OPERATOR_USB);
+    GamePad operatorJoy = new GamePad(Constants.OPERATOR_USB);
     
     Arm arm = Arm.getInstance();
     DriveTrain drive = new DriveTrain(Constants.DRIVE_LEFT_A, 
@@ -41,7 +43,6 @@ public class Main extends IterativeRobot {
     Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH, 
                                      Constants.COMPRESSOR_RELAY);
     Shooter shooter = Shooter.getInstance();
-    
     
     
     
@@ -65,12 +66,12 @@ public class Main extends IterativeRobot {
    
     public void disabledPeriodic() {
         arm.setPointAngle(5.18);
+        System.out.println("Arm current: " + arm.getActual());
     }   
 
     Solenoid shifterA = new Solenoid(2);
     Solenoid shifterB = new Solenoid(3);
     Solenoid sol3 = new Solenoid(4);
-    
     /**
      * This function is called periodically during operator control
      */
@@ -79,63 +80,91 @@ public class Main extends IterativeRobot {
         shifterA.set(!rightJoy.getRawButton(1));
         shifterB.set(rightJoy.getRawButton(1));
         double multiplier = 1.0;
+        SmartDashboard.putNumber("Shooter Actual Velocity", shooter.getVelocity());
+        SmartDashboard.putNumber("Shooter Set Velocity", shooter.getShooterSetSpeed());
+        SmartDashboard.putNumber("Arm Actual Position", arm.getActual());
+        SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());
+        
+        shooter.setTuningConstants(SmartDashboard.getNumber("SHOOTER_KT", Constants.SHOOTER_KT), 
+                                   SmartDashboard.getNumber("SHOOTER_KO", Constants.SHOOTER_KO));
+        arm.setPIDConstants(SmartDashboard.getNumber("ARM_P", Constants.ARM_P), 
+                            SmartDashboard.getNumber("ARM_I", Constants.ARM_I),
+                            SmartDashboard.getNumber("ARM_D", Constants.ARM_D)); 
         
         
+       
         if(leftJoy.getRawButton(6)) {
             winch.set(rightJoy.getRawAxis(2));
+            System.out.println("Running Winch!");
         } else {
             winch.set(0);
-            drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
             //drive.filteredTankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
+            //drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
+            drive.cheesyDrive(rightJoy.getRawAxis(2), leftJoy.getRawAxis(1), (Math.abs(leftJoy.getRawAxis(1)) > .5));
         }
-        //feeder.setBelt(operatorJoy.getRawAxis(4));
-        if(operatorJoy.getRawButton(5)) {
+        operator();
+    }
+    double armSet = 5.18;
+    public void operator() {
+        
+        double manScalar = SmartDashboard.getNumber("ARM_MAN_SCAL", Constants.ARM_MANUAL_INPUT_SCALAR);
+        
+        
+        if(operatorJoy.getButton(5)) {
             feeder.setBelt(1.0);
-        } else if(operatorJoy.getRawButton(7)) {
+        } else if(operatorJoy.getButton(7)) {
             feeder.setBelt(-1.0);
         } else {
             feeder.setBelt(0);
         }
-        if(operatorJoy.getRawButton(6)) {
+        if(operatorJoy.getButton(6)) {
             //feeder.setBelt(1.0);
             feeder.setKicker(false);
         } else {
             feeder.setKicker(true);
             
         }
-        operator();
-    }
-    double armSet = 5.18;
-    public void operator() {
+        
+        
         double shooterSet = 0.0;
         
-        
-        //armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
-        if(Math.abs(operatorJoy.getRawAxis(2)) > .5) {
-            armSet = arm.getSetpoint() + Constants.ARM_MANUAL_INPUT_SCALAR*EagleMath.signum(operatorJoy.getRawAxis(2));
-        } else if(EagleMath.isInBand(Math.abs((float)operatorJoy.getRawAxis(2)), (float).125, (float).499)) {
-            armSet = arm.getSetpoint() + (Constants.ARM_MANUAL_INPUT_SCALAR*.5)*EagleMath.signum(operatorJoy.getRawAxis(2));
-        }
         //armSet = operatorJoy.getRawAxis(4);
         System.out.println("Arm Actual: " + arm.getActual());
         System.out.println("Arm Set: " + arm.getSetpoint());
-        if(operatorJoy.getRawButton(1)) {
+        if(operatorJoy.getButton(1)) {
             shooterSet = 4000.0;
             //shooter.setMotors(1.0);
         //    armSet = 5.18;
-        } else if(operatorJoy.getRawButton(2)) {
+        } else if(operatorJoy.getButton(2)) {
             shooterSet = 6000.0;
             //shooter.setMotors(.75);
             //armSet = Constants.HUMAN_LOAD;
-        } else if(operatorJoy.getRawButton(3)) {
-            shooterSet = (Math.abs(operatorJoy.getRawAxis(4)) * 8600);
+        } else if(operatorJoy.getButton(3)) {
+            shooterSet = 8600;
             //shooter.setMotors(-.375);
-        } else if(operatorJoy.getRawButton(4)) {
-            shooterSet = -1000;
+        } else if(operatorJoy.getButton(8)) {
+            shooterSet = -2500;
             //shooter.setMotors(-.375);
         } else {
             //shooter.setMotors(0);
             shooterSet = 0.0;
+        }
+        
+        if(operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
+            armSet = Constants.HUMAN_LOAD;
+        } else if(operatorJoy.getDPad(GamePad.DPadStates.DOWN)) {
+            armSet = Constants.ARM_UPPER_LIM;
+        } else if(operatorJoy.getDPad(GamePad.DPadStates.LEFT)){
+            armSet = Constants.HIGH_SHOT;
+        } else if(operatorJoy.getDPad(GamePad.DPadStates.UP)){
+            armSet = Constants.STOW_UP;
+        } else {
+            //armSet =  arm.getSetpoint() + (operatorJoy.getRawAxis(2) * Constants.ARM_MANUAL_INPUT_SCALAR);
+            if(Math.abs(operatorJoy.getLeftY()) > .5) {
+                armSet = arm.getSetpoint() + Constants.ARM_MANUAL_INPUT_SCALAR*EagleMath.signum(operatorJoy.getLeftY());
+            } else if(EagleMath.isInBand(Math.abs((float)operatorJoy.getLeftY()), (float).125, (float).499)) {
+                armSet = arm.getSetpoint() + (Constants.ARM_MANUAL_INPUT_SCALAR*.5)*EagleMath.signum(operatorJoy.getLeftY());
+            }
         }
         shooter.setShooterSpeed(shooterSet);
         arm.setPointAngle(armSet);
