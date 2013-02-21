@@ -67,23 +67,32 @@ public class Main extends IterativeRobot {
     public void disabledPeriodic() {
         arm.setPointAngle(5.18);
         System.out.println("Arm current: " + arm.getActual());
+        SmartDashboard.putNumber("Shooter Actual Velocity", shooter.getVelocity());
+        SmartDashboard.putNumber("Shooter Set Velocity", shooter.getShooterSetSpeed());
+        SmartDashboard.putNumber("Arm Actual Position", arm.getActual());
+        SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());
+        SmartDashboard.putNumber("Drive Yaw", drive.getYaw());
+        SmartDashboard.putNumber("Drive Pitch", drive.getPitch());
+        
+        shooter.setTuningConstants(SmartDashboard.getNumber("SHOOTER_KT", Constants.SHOOTER_KT), 
+                                   SmartDashboard.getNumber("SHOOTER_KO", Constants.SHOOTER_KO));
+        arm.setPIDConstants(SmartDashboard.getNumber("ARM_P", Constants.ARM_P), 
+                            SmartDashboard.getNumber("ARM_I", Constants.ARM_I),
+                            SmartDashboard.getNumber("ARM_D", Constants.ARM_D)); 
+        
     }   
 
-    Solenoid shifterA = new Solenoid(2);
-    Solenoid shifterB = new Solenoid(3);
-    Solenoid sol3 = new Solenoid(4);
     /**
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-        sol3.set(true);
-        shifterA.set(!rightJoy.getRawButton(1));
-        shifterB.set(rightJoy.getRawButton(1));
         double multiplier = 1.0;
         SmartDashboard.putNumber("Shooter Actual Velocity", shooter.getVelocity());
         SmartDashboard.putNumber("Shooter Set Velocity", shooter.getShooterSetSpeed());
         SmartDashboard.putNumber("Arm Actual Position", arm.getActual());
         SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());
+        SmartDashboard.putNumber("Drive Yaw", drive.getYaw());
+        SmartDashboard.putNumber("Drive Pitch", drive.getPitch());
         
         shooter.setTuningConstants(SmartDashboard.getNumber("SHOOTER_KT", Constants.SHOOTER_KT), 
                                    SmartDashboard.getNumber("SHOOTER_KO", Constants.SHOOTER_KO));
@@ -99,9 +108,11 @@ public class Main extends IterativeRobot {
         } else {
             winch.set(0);
             //drive.filteredTankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
-            //drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
-            drive.cheesyDrive(rightJoy.getRawAxis(2), leftJoy.getRawAxis(1), (Math.abs(leftJoy.getRawAxis(1)) > .5));
+            drive.tankDrive(leftJoy.getRawAxis(2)*multiplier, rightJoy.getRawAxis(2)*multiplier);
+            //drive.cheesyDrive(rightJoy.getRawAxis(2), leftJoy.getRawAxis(1), (Math.abs(leftJoy.getRawAxis(1)) > .5) && (Math.abs(rightJoy.getRawAxis(2)) < .25));
         }
+        
+        drive.setShifter(rightJoy.getRawButton(1));
         operator();
     }
     double armSet = 5.18;

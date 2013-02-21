@@ -16,6 +16,9 @@ import org.team399.y2013.Utilities.Integrator;
 public class DriveTrain {
 
     private Talon m_leftA, m_leftB, m_rightA, m_rightB;   //TODO: Change type to whatever speed controller we use
+    private Gyro yaw = new Gyro(2);
+    private Gyro pitch =null;// new Gyro(3);
+    private Solenoid shifter = new Solenoid(4);
 
     /**
      * Constructor
@@ -31,6 +34,8 @@ public class DriveTrain {
         m_rightB = new Talon(rightB);
         throttleIntegrator.reset();
         turnIntegrator.reset();
+        yaw.reset();
+        //pitch.reset();
     }
 
     /**
@@ -173,7 +178,39 @@ public class DriveTrain {
 
         tankDrive(lPower, rPower);
     }
+    
+    public double getYaw() {
+        return yaw.getAngle();
+    }
+    
+    public double getPitch() {
+        return 0;
+    }
+    
+    public void setShifter(boolean state) {
+        shifter.set(state);
+    }
 
+    
+     final double angleP = 4, angleI = 0, angleD = 0;
+    double angleInt = 0, prevAngleError =0;
+    public boolean turnAngle(double angle) {
+        double errorThresh = 5.0;
+        double angleError = yaw.getAngle() - angle;
+        double turn = angleP*angleError
+                        +angleI*angleInt
+                            +angleD*(angleError - prevAngleError);
+        if(Math.abs((angleInt+angleError)*angleI) <= 1)//Limit the integration
+        {
+            angleInt += angleError;
+        }
+        prevAngleError = angleError;
+        
+        arcadeDrive(0, turn);
+        
+        return Math.abs(angleError) < errorThresh;
+    }
+    
     
     public boolean moveDist(double dist, double actL, double actR) {
         double errorThresh = .25;

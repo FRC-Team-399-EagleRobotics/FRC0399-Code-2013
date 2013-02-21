@@ -18,10 +18,10 @@ public class Constants {
     public static final int COMPRESSOR_SWITCH = 1;
     
     //Motor Controller ports
-    public static final int DRIVE_LEFT_A  = 3;
-    public static final int DRIVE_LEFT_B  = 4;
-    public static final int DRIVE_RIGHT_A = 1;
-    public static final int DRIVE_RIGHT_B = 2;
+    public static final int DRIVE_LEFT_A  = 1;
+    public static final int DRIVE_LEFT_B  = 2;
+    public static final int DRIVE_RIGHT_A = 4;
+    public static final int DRIVE_RIGHT_B = 3;
     
     public static final int WINCH_PORT = 5;
     
