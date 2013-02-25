@@ -15,8 +15,6 @@ public class Arm {
     
 
     private CANJaguar arm = null;
-    //Todo: move constants into constants class.
-    //Todo: look into SDB for constants editing
     private double ARM_P = Constants.ARM_P, ARM_I = Constants.ARM_I, ARM_D = Constants.ARM_D;
     private double setpoint = 5.18;
     private boolean enabled = false;
@@ -62,8 +60,6 @@ public class Arm {
         if(setpoint > 10) setpoint = 10;
         if(setpoint < Constants.ARM_LOWER_LIM) setpoint = Constants.ARM_LOWER_LIM;
         if(setpoint > Constants.ARM_UPPER_LIM) setpoint = Constants.ARM_UPPER_LIM;
-        //angle is relative to horizontal
-        //todo: scale input from angle to pot turns
         //this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
         this.setpoint = setpoint;
         try {
@@ -130,7 +126,6 @@ public class Arm {
                 armJag.setPID(ARM_P, ARM_I, ARM_D);
                 
                 armJag.configSoftPositionLimits(Constants.ARM_UPPER_LIM, Constants.ARM_LOWER_LIM);
-                //todo tune limits and constants
 
                 //armJag.disableControl();
                 //armJag.configMaxOutputVoltage(12.0);

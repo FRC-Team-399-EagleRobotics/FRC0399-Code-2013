@@ -33,6 +33,4 @@ public class Intake {
         return discSensor.getAverageVoltage() > discThresh;
     }
     
-    
-            
 }

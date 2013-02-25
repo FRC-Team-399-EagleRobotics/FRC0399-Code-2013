@@ -2,13 +2,14 @@ package org.team399.y2013.robot.Systems;
 
 import edu.wpi.first.wpilibj.*;
 import org.team399.y2013.Utilities.EagleMath;
+import org.team399.y2013.Utilities.FIRFilter;
 import org.team399.y2013.Utilities.MovingAverage;
 import org.team399.y2013.robot.Constants;
 
 /**
  * Code to control the 3 motor shooter on Team 399's 2013 robot.
  * Uses Bang-Bang with Feed Forward to control the rotational velocity of the shooter wheel
- * Also uses logic to help with graceful degradation
+ * Also uses logic to help with graceful degradation - 
  * @author Jeremy
  */
 public class Shooter implements Runnable {
@@ -35,8 +36,8 @@ public class Shooter implements Runnable {
     private static Shooter singleInstance = null;
     private Thread thread = new Thread(this);
     private double velocity = 0.0;
+    private FIRFilter velocityFilter = new FIRFilter();
 
-    //TODO: Sort the above, refer to constants file for IDs
     public Shooter() // make sure that only this class can make instances of Shooter
     {
         //LEAVE THIS BLANK FOR THREADED OPERATION
@@ -101,14 +102,17 @@ public class Shooter implements Runnable {
             shooterB = initializeJaguar(shooterB, SHOOTER_B_ID);
             shooterC = initializeJaguar(shooterC, SHOOTER_C_ID);
         }
-
-         
         initialized = true;
         System.out.println("Shooter initialized!");
     }
+    
     int errorThresh = 10;
     private int[] errorCnt = {0, 0, 0};
     
+    /**
+     * Returns the calculated velocity. Thread safe version
+     * @return 
+     */
     public synchronized double getVelocity() {
         return velocity;
     }
@@ -148,6 +152,12 @@ public class Shooter implements Runnable {
         return count;
     }
 
+    /**
+     * Initialize the CAN Jaguars for the shooter in one simple function
+     * @param toBeInitialized
+     * @param CAN_ID
+     * @return 
+     */
     private CANJaguar initializeJaguar(CANJaguar toBeInitialized, int CAN_ID) {
 
         incrementErrCount(CAN_ID); // record how many times this jag has been reinitialized.
@@ -181,6 +191,9 @@ public class Shooter implements Runnable {
         return toBeInitialized;
     }
 
+    /**
+     * Thread run method. 
+     */
     public void run() {
         init();
         while (running && initialized) {
@@ -199,6 +212,11 @@ public class Shooter implements Runnable {
             }
         }
     }
+    
+    /**
+     * Drivetrain encoders are plugged into the shooter jaguars for wiring simplicity
+     * @return the left drivetrain encoder position
+     */
     public synchronized double getLeftDriveEncoder() {
         double answer = -1;
         try {
@@ -209,6 +227,10 @@ public class Shooter implements Runnable {
         return answer;
     }
     
+    /**
+     * Drivetrain encoders are plugged into the shooter jaguars for wiring simplicity
+     * @return the right drivetrain encoder position
+     */
     public synchronized double getRightDriveEncoder() {
         double answer = -1;
         try {
@@ -219,10 +241,18 @@ public class Shooter implements Runnable {
         return answer;
     }
 
+    /**
+     * Sets the target velocity
+     * @param newSetpoint target vel in RPM
+     */
     public synchronized void setShooterSpeed(double newSetpoint) {
         shooter_setpoint = newSetpoint;
     }
 
+    /**
+     * 
+     * @return the set velocity
+     */
     public synchronized double getShooterSetSpeed() {
         return shooter_setpoint;
     }
@@ -230,7 +260,10 @@ public class Shooter implements Runnable {
     private final double a = 0.0;
     private double prevT = System.currentTimeMillis();
     private double pos = 0, prevPos = 0;
-MovingAverage velFilt = new MovingAverage(8);
+    /**
+     * Gets the rotational velocity of the encoder
+     * @return 
+     */
     private double getEncoderRate() {
         try {
             prevPos = pos;
@@ -241,7 +274,7 @@ MovingAverage velFilt = new MovingAverage(8);
             double newVel = (pos - prevPos) / (((time - prevT) * (.0000166666666))); //Velocity is change in position divided by change in unit time, converted to minutes
             prevT = time;
 
-            vel = velFilt.calculate(newVel);
+            vel = velocityFilter.filter(newVel);
 
             //vel /= 2;			//Testing showed that output was approx 2x of actual
             if (Math.abs(vel) < 50) {	//zero out any unusually tiny outputs
@@ -260,11 +293,20 @@ MovingAverage velFilt = new MovingAverage(8);
     }
     private double error = 0;
 
-    
+    /**
+     * Sets new tuning constants
+     * @param kT Closed loop tuning constant
+     * @param kO Open loop tuning constant
+     */
     public synchronized void setTuningConstants(double kT, double kO) {
         this.kT = kT;
         this.kO = kO;
     }
+    
+    /**
+     * Velocity control loop
+     * @param setpoint target velocity
+     */
     private void velocityControl(double setpoint) {
         double rate = getEncoderRate();
         velocity = rate;
@@ -323,18 +365,35 @@ MovingAverage velFilt = new MovingAverage(8);
         setMotors(output*EagleMath.signum(setpoint));
     }
 
+    /**
+     * 
+     * @return a flag indicating shooter is at target speed
+     */
     public synchronized boolean isAtTargetSpeed() {
         return Math.abs(error) < 200;
     }
 
+    /**
+     * enables or disables closed loop control
+     * @param flag 
+     */
     public synchronized void setIsClosedLoop(boolean flag) {
         isClosedLoop = flag;
     }
 
+    /**
+     * Scales a number from a voltage range
+     * @param input
+     * @return 
+     */
     private double fromVolts(double input) {
         return input / 12.0;
     }
 
+    /**
+     * output signal to the shooter motors
+     * @param output 
+     */
     public void setMotors(double output) {
         output *=-1;
         if (getErrorCount(SHOOTER_A_ID) < errorThresh) {

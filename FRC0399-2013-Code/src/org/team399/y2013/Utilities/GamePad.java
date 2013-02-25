@@ -27,7 +27,11 @@ public class GamePad {
      * @return the Y axis
      */
     public double getLeftY() {
-        return m_Pad.getRawAxis(2); //Return the left Y axis value
+        double answer = m_Pad.getRawAxis(2); //Return the left Y axis value
+        if(Math.abs(answer) < .2) {
+            answer = 0;
+        }
+        return answer;
     }
 
     /**
@@ -91,8 +95,8 @@ public class GamePad {
 
         final int UP = 0;
         final int DOWN = 1;
-        final int LEFT = 2;
-        final int RIGHT = 3;
+        final int LEFT = 3;
+        final int RIGHT = 2;
     }
 
     /**

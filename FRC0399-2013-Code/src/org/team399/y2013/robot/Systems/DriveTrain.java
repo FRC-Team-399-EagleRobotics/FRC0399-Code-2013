@@ -8,6 +8,7 @@ import com.sun.squawk.util.MathUtils;
 import edu.wpi.first.wpilibj.*;
 import org.team399.y2013.Utilities.EagleMath;
 import org.team399.y2013.Utilities.Integrator;
+import org.team399.y2013.robot.Constants;
 
 /**
  *
@@ -15,10 +16,11 @@ import org.team399.y2013.Utilities.Integrator;
  */
 public class DriveTrain {
 
-    private Talon m_leftA, m_leftB, m_rightA, m_rightB;   //TODO: Change type to whatever speed controller we use
+    private Talon m_leftA, m_leftB, m_rightA, m_rightB;
     private Gyro yaw = new Gyro(2);
-    private Gyro pitch =null;// new Gyro(3);
+    private Gyro pitch = null;// new Gyro(3);
     private Solenoid shifter = new Solenoid(4);
+    private final double WHEEL_DIA = Constants.WHEEL_DIAMETER;
 
     /**
      * Constructor
@@ -56,6 +58,12 @@ public class DriveTrain {
         m_rightB.set(rightPWM);
     }
 
+    
+    /**
+     * Drive input: throttle(Y translation) and turn(yaw translation) inputs
+     * @param throttle y translation power
+     * @param turn yaw translation power
+     */
     public void arcadeDrive(double throttle, double turn) {
         double leftOut = 0, rightOut = 0;
 
@@ -92,9 +100,14 @@ public class DriveTrain {
     double throttle = 0, turn = 0,
             prevThrottle = 0, prevTurn = 0;
 
+    /**
+     * Drive algorithm with negative inertia(a la 971/254) on both the throttle and turning inputs
+     * @param left
+     * @param right 
+     */
     public void filteredTankDrive(double left, double right) {
         double kThrot = 0.0075;
-        double kTurn = 0.0075 ;
+        double kTurn = 0.0075;
 
         prevThrottle = throttle;
         prevTurn = turn;
@@ -134,9 +147,13 @@ public class DriveTrain {
     double twoStickToThrottle(double left, double right) {
         return (left + right) / 2;
     }
-    
-        // Cheesy Drive - Thanks to Austin Schuh and Teams 254/971. Yeah Buddy!
-    // It would not be possible to control a fast drive without this
+
+    /**
+     * cheesy drive by team 254, ported to java by team 125
+     * @param throttle
+     * @param wheel
+     * @param quickTurn 
+     */
     public void cheesyDrive(double throttle, double wheel, boolean quickTurn) {
 
         double angular_power = 0.0;
@@ -145,12 +162,11 @@ public class DriveTrain {
         double rPower = 0.0;
         double lPower = 0.0;
 
-        if(quickTurn) {
+        if (quickTurn) {
             overPower = 1.0;
             sensitivity = 1.0;
             angular_power = wheel;
-        }
-        else {
+        } else {
             overPower = 0.0;
             angular_power = Math.abs(throttle) * wheel * sensitivity;
         }
@@ -159,77 +175,114 @@ public class DriveTrain {
         lPower += angular_power;
         rPower -= angular_power;
 
-        if(lPower > 1.0) {
+        if (lPower > 1.0) {
             rPower -= overPower * (lPower - 1.0);
             lPower = 1.0;
-        }
-        else if(rPower > 1.0) {
+        } else if (rPower > 1.0) {
             lPower -= overPower * (rPower - 1.0);
             rPower = 1.0;
-        }
-        else if(lPower < -1.0) {
+        } else if (lPower < -1.0) {
             rPower += overPower * (-1.0 - lPower);
             lPower = -1.0;
-        }
-        else if(rPower < -1.0) {
+        } else if (rPower < -1.0) {
             lPower += overPower * (-1.0 - rPower);
             rPower = -1.0;
         }
 
         tankDrive(lPower, rPower);
     }
-    
+
+    /**
+     * Read the yaw gyro
+     * @return 
+     */
     public double getYaw() {
         return yaw.getAngle();
     }
-    
+
+    /**
+     * read the pitch gyro
+     * @return 
+     */
     public double getPitch() {
         return 0;
     }
-    
+
+    /**
+     * Set the shifter solenoids
+     * @param state 
+     */
     public void setShifter(boolean state) {
         shifter.set(state);
     }
+    final double angleP = Constants.YAW_P,
+            angleI = Constants.YAW_I,
+            angleD = Constants.YAW_D;
+    double angleInt = 0, prevAngleError = 0;
 
-    
-     final double angleP = 4, angleI = 0, angleD = 0;
-    double angleInt = 0, prevAngleError =0;
+    /**
+     * Closed loop turning by angle
+     * @param angle
+     * @return boolean indicating actual yaw is within tolerance
+     */
     public boolean turnAngle(double angle) {
-        double errorThresh = 5.0;
+        double errorThresh = Constants.YAW_ERROR_THRESH;
         double angleError = yaw.getAngle() - angle;
-        double turn = angleP*angleError
-                        +angleI*angleInt
-                            +angleD*(angleError - prevAngleError);
-        if(Math.abs((angleInt+angleError)*angleI) <= 1)//Limit the integration
+        double turn = angleP * angleError
+                + angleI * angleInt
+                + angleD * (angleError - prevAngleError);
+        if (Math.abs((angleInt + angleError) * angleI) <= 1)//Limit the integration
         {
             angleInt += angleError;
         }
         prevAngleError = angleError;
-        
+
         arcadeDrive(0, turn);
-        
+
         return Math.abs(angleError) < errorThresh;
     }
-    
-    
-    public boolean moveDist(double dist, double actL, double actR) {
-        double errorThresh = .25;
+
+    //Todo: example usage for moveDist and turnAngle
+    /**
+     * Move drive a specific distance
+     * Uses a logistic control loop to control drivetrain position
+     * http://en.wikipedia.org/wiki/Logistic_function
+     * Saturates the output till actual input is near target. acts as a 
+     * smooth bang bang
+     * @param dist distance in inches
+     * @param actL actual encoder value for left drive
+     * @param actR actual encoder value for right
+     * @return true if drivetrain has reached target
+     */
+    public boolean moveDist(double dist, double speed, double actL, double actR) {
+        dist /= WHEEL_DIA * Math.PI;  //convert distance from inches into encoder rotations
+        double errorThresh = Constants.DISTANCE_ERROR_THRESH;
         double errorL = actL - dist;
         double errorR = actR - dist;
-        tankDrive(distanceControl(errorL), distanceControl(errorR));
-        
+
+        errorL = (Math.abs(errorL) < errorThresh) ? 0 : errorL;
+        errorR = (Math.abs(errorR) < errorThresh) ? 0 : errorR;
+
+
+        tankDrive(distanceControl(errorL, speed), distanceControl(errorR, speed));
+
         System.out.println("Drive error L: " + errorL);
         System.out.println("Drive error R: " + errorR);
-        
-        return Math.abs(errorL) < errorThresh && (Math.abs(errorL) < errorThresh);
-        
+        return errorL == 0 && errorR == 0;
     }
     
-    final double maxSpeed = .75;
-    final double distAttenuation = 0.8;
-    
-    private double distanceControl(double distance){
-        return maxSpeed*(1- MathUtils.pow(Math.E, -distAttenuation*distance));
+    final double distAttenuation = Constants.DIST_KT;
+
+    /**
+     * Custom control loop for drive. Called Logistic control
+     * http://en.wikipedia.org/wiki/Logistic_function
+     * Saturates the output till actual input is near target. acts as a 
+     * smooth bang bang
+     * @param distance target position - actual position
+     * @param maxSpeed Maximum output. Saturates output to this
+     * @return calculated output speed
+     */
+    private double distanceControl(double distance, double maxSpeed) {
+        return maxSpeed * (1 - MathUtils.pow(Math.E, -distAttenuation * distance));
     }
 }
-
