@@ -31,6 +31,7 @@ public class Main extends IterativeRobot {
     GamePad operatorJoy = new GamePad(Constants.OPERATOR_USB);
     
     Arm arm = Arm.getInstance();
+    Shooter shooter = Shooter.getInstance();
     DriveTrain drive = new DriveTrain(Constants.DRIVE_LEFT_A,
             Constants.DRIVE_LEFT_B,
             Constants.DRIVE_RIGHT_A,
@@ -42,7 +43,6 @@ public class Main extends IterativeRobot {
     Climber climber = new Climber(Constants.WINCH_PORT);
     Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
             Constants.COMPRESSOR_RELAY);
-    Shooter shooter = Shooter.getInstance();
 
     /**
      * This function is run when the robot is first started up and should be
@@ -61,29 +61,22 @@ public class Main extends IterativeRobot {
     }
 
     public void disabledPeriodic() {
-        arm.setPointAngle(5.18);
-        System.out.println("Arm current: " + arm.getActual());
-        updateDashboard();
+        arm.setPointAngle(5.18);    //Set arm setpoint to stowed up when disabled
+        updateDashboard();          //Update diagnostic dashboard
 
+        //For safety, require a disable to change shooter and arm tuning constants using SDB
         shooter.setTuningConstants(SmartDashboard.getNumber("SHOOTER_KT", Constants.SHOOTER_KT),
                 SmartDashboard.getNumber("SHOOTER_KO", Constants.SHOOTER_KO));
         arm.setPIDConstants(SmartDashboard.getNumber("ARM_P", Constants.ARM_P),
                 SmartDashboard.getNumber("ARM_I", Constants.ARM_I),
                 SmartDashboard.getNumber("ARM_D", Constants.ARM_D));
-
     }
 
     /**
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-        updateDashboard();
-
-        shooter.setTuningConstants(SmartDashboard.getNumber("SHOOTER_KT", Constants.SHOOTER_KT),
-                SmartDashboard.getNumber("SHOOTER_KO", Constants.SHOOTER_KO));
-        arm.setPIDConstants(SmartDashboard.getNumber("ARM_P", Constants.ARM_P),
-                SmartDashboard.getNumber("ARM_I", Constants.ARM_I),
-                SmartDashboard.getNumber("ARM_D", Constants.ARM_D));
+        updateDashboard();  //Update diagnostic dashboard
 
         if(leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
