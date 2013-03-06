@@ -60,9 +60,11 @@ public class Constants {
     
     //Arm constants
     public static final int ARM_ID = 5;     //CAN ID
-    public static final double ARM_P = 600; //PID constants
-    public static final double ARM_I = .0010;
+    public static final double ARM_P = 400; //PID constants
+    public static final double ARM_I = .00010;
     public static final double ARM_D = 0.0;
+    
+    
     public static final double ARM_LOWER_LIM = 4.6; //is actually vertical most limit
     public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+2.1;
     public static final double ARM_MANUAL_INPUT_SCALAR = .075;   

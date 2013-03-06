@@ -35,6 +35,8 @@ public class Arm {
             System.out.println("Arm initialized!");
             initCounter++;
         }
+        
+        if(initCounter >= 10) System.out.println("Arm Jag init failed after 10 attempts");
         setpoint = Constants.STOW_UP;
     }
 
@@ -114,8 +116,8 @@ public class Arm {
                 armJag = new CANJaguar(CAN_ID, CANJaguar.ControlMode.kPosition);
             }
 
-            if (armJag.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
-            {
+//            if (armJag.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
+  //          {
                 // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
                 armJag.changeControlMode(CANJaguar.ControlMode.kPosition);
                 //armJag.enableControl();
@@ -133,7 +135,7 @@ public class Arm {
                 armJag.setVoltageRampRate(0.0);	//Might want to play with this during testing
                 armJag.configFaultTime(0.5); //0.5 second is min time.
                 armJag.enableControl();
-            }
+    //        }
         } catch (Throwable e) {
             armJag = null; // If a jaguar fails to be initialized, then set it to null, and try initializing at a later time
             System.err.println("ARM Init CAN ERROR. ID: " + CAN_ID);
