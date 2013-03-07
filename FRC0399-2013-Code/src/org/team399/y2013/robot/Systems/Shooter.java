@@ -72,6 +72,7 @@ public class Shooter implements Runnable {
             running = true;
             try {
                 thread.start();
+                System.out.println("Shooter thread started");
             } catch (Exception error) {
                 System.out.println(error);
                 running = false;

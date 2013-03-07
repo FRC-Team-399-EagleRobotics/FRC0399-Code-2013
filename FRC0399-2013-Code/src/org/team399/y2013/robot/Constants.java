@@ -60,14 +60,14 @@ public class Constants {
     
     //Arm constants
     public static final int ARM_ID = 5;     //CAN ID
-    public static final double ARM_P = 400; //PID constants
+    public static final double ARM_P = 600; //PID constants
     public static final double ARM_I = .00010;
     public static final double ARM_D = 0.0;
     
     
     public static final double ARM_LOWER_LIM = 4.6; //is actually vertical most limit
     public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+2.1;
-    public static final double ARM_MANUAL_INPUT_SCALAR = .075;   
+    public static final double ARM_MANUAL_INPUT_SCALAR = .015;   
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
     public static double STOW_UP     = ARM_UPPER_LIM-1.42;
@@ -75,7 +75,7 @@ public class Constants {
     public static double HUMAN_LOAD  = STOW_UP+0.6241;
     public static double HIGH_SHOT   = STOW_UP+0.4286;
     public static double MID_SHOT    = STOW_UP+0.6241;
-    public static double STOW_DOWN   = ARM_LOWER_LIM;
+    public static double STOW_DOWN   = 6.3;
     public static double LOW_SHOT    = STOW_DOWN-0.5;
     
     //todo: organize these

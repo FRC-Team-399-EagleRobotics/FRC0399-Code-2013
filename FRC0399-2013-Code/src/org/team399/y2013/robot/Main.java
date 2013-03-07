@@ -92,7 +92,7 @@ public class Main extends IterativeRobot {
         //drive.cheesyDrive(rightJoy.getRawAxis(2), leftJoy.getRawAxis(1), (Math.abs(leftJoy.getRawAxis(1)) > .5) && (Math.abs(rightJoy.getRawAxis(2)) < .25));
 
         drive.setShifter(rightJoy.getRawButton(1));
-     //   operator();
+        operator();
     }
     double armSet = 5.18;
 
@@ -138,11 +138,7 @@ public class Main extends IterativeRobot {
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.STOW_UP;
         } else {
-            if (Math.abs(operatorJoy.getLeftY()) > .5) {
                 armSet = arm.getSetpoint() + manScalar * EagleMath.signum(operatorJoy.getLeftY());
-            } else if (EagleMath.isInBand(Math.abs((float) operatorJoy.getLeftY()), (float) .125, (float) .499)) {
-                armSet = arm.getSetpoint() + (manScalar * .5) * EagleMath.signum(operatorJoy.getLeftY());
-            }
         }
         shooter.setShooterSpeed(shooterSet);
         arm.setPointAngle(armSet);
