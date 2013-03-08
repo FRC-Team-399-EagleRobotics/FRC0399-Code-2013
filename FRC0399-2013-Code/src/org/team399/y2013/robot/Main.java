@@ -15,6 +15,7 @@ import org.team399.y2013.robot.Systems.Intake;
 import org.team399.y2013.robot.Systems.Shooter;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.team399.y2013.Utilities.GamePad;
+import org.team399.y2013.robot.Autonomous.Shoot3Auton;
 import org.team399.y2013.robot.Systems.Climber;
 
 /**
@@ -30,18 +31,18 @@ public class Main extends IterativeRobot {
     Joystick rightJoy = new Joystick(Constants.DRIVER_RIGHT_USB);
     GamePad operatorJoy = new GamePad(Constants.OPERATOR_USB);
     
-    Arm arm = null;
-    Shooter shooter = Shooter.getInstance();
-    DriveTrain drive = new DriveTrain(Constants.DRIVE_LEFT_A,
+    public static Arm arm = null;
+    public static Shooter shooter = Shooter.getInstance();
+    public static DriveTrain drive = new DriveTrain(Constants.DRIVE_LEFT_A,
             Constants.DRIVE_LEFT_B,
             Constants.DRIVE_RIGHT_A,
             Constants.DRIVE_RIGHT_B);
-    Feeder feeder = new Feeder(Constants.FEEDER_MOTOR,
+    public static Feeder feeder = new Feeder(Constants.FEEDER_MOTOR,
             Constants.KICKER_PORT);
-    Intake intake = new Intake(Constants.INTAKE_MOTOR,
+    public static Intake intake = new Intake(Constants.INTAKE_MOTOR,
             Constants.INTAKE_SENSOR);
-    Climber climber = new Climber(Constants.WINCH_PORT);
-    Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
+    public static Climber climber = new Climber(Constants.WINCH_PORT);
+    public static Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
             Constants.COMPRESSOR_RELAY);
 
     /**
@@ -55,10 +56,17 @@ public class Main extends IterativeRobot {
         arm.setEnabled(true);
     }
 
+    public void autonomousInit() {
+        Shoot3Auton.start();
+        arm.setPointAngle(Constants.MID_SHOT);
+    }
+    
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
+        //arm.setPointAngle(Constants.MID_SHOT);
+        Shoot3Auton.run();
     }
 
     public void disabledPeriodic() {
@@ -109,9 +117,9 @@ public class Main extends IterativeRobot {
         }
         if (operatorJoy.getButton(6)) {
             //feeder.setBelt(1.0);
-            feeder.setKicker(false);
+            feeder.setKicker(Constants.KICKER_OUT);
         } else {
-            feeder.setKicker(true);
+            feeder.setKicker(Constants.KICKER_IN);
 
         }
 
@@ -124,14 +132,14 @@ public class Main extends IterativeRobot {
         } else if (operatorJoy.getButton(3)) {
             shooterSet = 8600;
         } else if (operatorJoy.getButton(8)) {
-            shooterSet = -2500;
+            shooterSet = -3000;
         } else {
             shooterSet = 0.0;
         }
 
         if (operatorJoy.getDPad(GamePad.DPadStates.LEFT)) {
             armSet = Constants.HUMAN_LOAD;
-        } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN)) {
+        } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN) || rightJoy.getRawButton(2)) {
             armSet = Constants.ARM_UPPER_LIM;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
             armSet = Constants.HIGH_SHOT;

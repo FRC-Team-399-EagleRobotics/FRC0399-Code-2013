@@ -237,7 +237,7 @@ public class DriveTrain {
         }
         prevAngleError = angleError;
 
-        arcadeDrive(0, turn);
+        tankDrive(turn, -turn);
 
         return Math.abs(angleError) < errorThresh;
     }

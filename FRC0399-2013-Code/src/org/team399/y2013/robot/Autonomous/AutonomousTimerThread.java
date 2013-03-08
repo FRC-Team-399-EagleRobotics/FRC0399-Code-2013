@@ -25,8 +25,6 @@ public class AutonomousTimerThread extends Thread{
      */
     public synchronized void start() {
         running = true;
-        startTime = System.currentTimeMillis();
-        timeElapsed = 0;
     }
     
     /**
@@ -69,6 +67,8 @@ public class AutonomousTimerThread extends Thread{
      */
     public void run() {
         startTime = System.currentTimeMillis();
+        
+        timeElapsed = 0;
         while(running) {
             timeElapsed = System.currentTimeMillis() - startTime;
         }

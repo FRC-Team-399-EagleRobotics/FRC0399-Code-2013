@@ -30,13 +30,15 @@ public class Shooter implements Runnable {
     private CANJaguar shooterA = null;
     private CANJaguar shooterB = null;
     private CANJaguar shooterC = null;
+    private Solenoid indicator = new Solenoid(5);
     private boolean running = false;
     private boolean isClosedLoop = true;
     private boolean initialized = false;
     private static Shooter singleInstance = null;
     private Thread thread = new Thread(this);
     private double velocity = 0.0;
-    private FIRFilter velocityFilter = new FIRFilter();
+    //private FIRFilter velocityFilter = new FIRFilter();
+    private MovingAverage velFilt = new MovingAverage(10);
 
     public Shooter() // make sure that only this class can make instances of Shooter
     {
@@ -275,7 +277,9 @@ public class Shooter implements Runnable {
             double newVel = (pos - prevPos) / (((time - prevT) * (.0000166666666))); //Velocity is change in position divided by change in unit time, converted to minutes
             prevT = time;
 
-            vel = velocityFilter.filter(newVel);
+            //vel = velocityFilter.filter(newVel);
+            vel = velFilt.calculate(newVel);
+            //vel = newVel;
 
             //vel /= 2;			//Testing showed that output was approx 2x of actual
             if (Math.abs(vel) < 50) {	//zero out any unusually tiny outputs
@@ -311,11 +315,11 @@ public class Shooter implements Runnable {
     private void velocityControl(double setpoint) {
         double rate = getEncoderRate();
         velocity = rate;
-        error = rate - setpoint;	//Calculate error
+        error = rate-setpoint;	//Calculate error
         double output = 0.0;				//initialize output
-        //System.out.println("Setpoint: " + setpoint);
-        //System.out.println("Rate:     " + rate);
-        //System.out.println("Error:    " + error);
+        System.out.println("Setpoint: " + setpoint);
+        System.out.println("Rate:     " + rate);
+        System.out.println("Error:    " + error);
 
         double feedFwd;
         feedFwd = (Math.abs(setpoint) / kV);
@@ -329,18 +333,19 @@ public class Shooter implements Runnable {
             speedScalar = .3;
         }
         
-        if(EagleMath.signum(setpoint) < 0) {
+        if(EagleMath.signum(setpoint) > 0) {
             output = ((error < 0) ? maxSpeed*speedScalar : feedFwd * kT);
         } else {
             output = ((error > 0) ? -maxSpeed*speedScalar : -feedFwd * kT);
         }
+        indicator.set((Math.abs(error) < 1000));
         
 
         
         if (rate == 0 || !isClosedLoop) {
           //  System.out.println("Shooter in open loop/feed fwd mode");
             //maybe scale it a bit differently once we are relying on it for speed control
-            output = feedFwd * kO;
+            output = feedFwd * kO*EagleMath.signum(setpoint);
             if (!isClosedLoop) // if we are running in open loop mode, don't print that we are in failsafe, as the operator should be 
             // aware of the malfunction, or has decided that they like open loop control.
             {
@@ -363,7 +368,7 @@ public class Shooter implements Runnable {
         
         
         
-        setMotors(output*EagleMath.signum(setpoint));
+        setMotors(output*1);//EagleMath.signum(setpoint));
     }
 
     /**
@@ -371,7 +376,7 @@ public class Shooter implements Runnable {
      * @return a flag indicating shooter is at target speed
      */
     public synchronized boolean isAtTargetSpeed() {
-        return Math.abs(error) < 200;
+        return Math.abs(error) < 300;
     }
 
     /**

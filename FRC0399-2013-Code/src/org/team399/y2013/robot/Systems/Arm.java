@@ -127,7 +127,7 @@ public class Arm {
 
                 armJag.setPID(ARM_P, ARM_I, ARM_D);
                 
-                armJag.configSoftPositionLimits(Constants.ARM_UPPER_LIM, Constants.ARM_LOWER_LIM);
+                //armJag.configSoftPositionLimits(Constants.ARM_UPPER_LIM, Constants.ARM_LOWER_LIM);
 
                 //armJag.disableControl();
                 //armJag.configMaxOutputVoltage(12.0);
