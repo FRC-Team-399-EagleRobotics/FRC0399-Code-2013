@@ -20,7 +20,7 @@ public class Shoot3Auton {
         start = System.currentTimeMillis();
         //timer.start();
         Main.shooter.start();
-        Main.shooter.setShooterSpeed(8200);
+        Main.shooter.setShooterSpeed(7900);
         Main.arm.setPointAngle(Constants.MID_SHOT);
         Main.arm.setEnabled(true);
         System.out.println("Init'd auton");
@@ -54,8 +54,10 @@ public class Shoot3Auton {
 //            Main.shooter.setShooterSpeed(0);
 //        }
         if(!finished) {
-            Main.arm.setPointAngle(Constants.MID_SHOT);
-            Timer.delay(2.0);
+            Main.arm.setPointAngle(Constants.MID_SHOT+.05); //add .1 to make it mid
+            Timer.delay(1.85);
+            Main.feeder.setBelt(.5);
+            Timer.delay(.25);
             Main.feeder.setKicker(Constants.KICKER_OUT);
             Main.feeder.setBelt(0);
             Timer.delay(.75);
@@ -69,6 +71,7 @@ public class Shoot3Auton {
             Main.feeder.setKicker(Constants.KICKER_IN);
             Timer.delay(.25);
             Main.feeder.setBelt(1.0);
+            //Main.shooter.setShooterSpeed(8500);
             Timer.delay(1.25);
             Main.feeder.setKicker(Constants.KICKER_OUT);
             Main.feeder.setBelt(0);
@@ -88,7 +91,10 @@ public class Shoot3Auton {
             finished = true;
         }
         
+        
         Main.drive.tankDrive(0,0);
+        Main.feeder.setBelt(0);
+        Main.shooter.setShooterSpeed(0);
         
     }
     

@@ -67,6 +67,7 @@ public class Main extends IterativeRobot {
     public void autonomousPeriodic() {
         //arm.setPointAngle(Constants.MID_SHOT);
         Shoot3Auton.run();
+        
     }
 
     public void disabledPeriodic() {
@@ -142,7 +143,7 @@ public class Main extends IterativeRobot {
         } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN) || rightJoy.getRawButton(2)) {
             armSet = Constants.ARM_UPPER_LIM;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
-            armSet = Constants.HIGH_SHOT;
+            armSet = Constants.MID_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.STOW_UP;
         } else {
@@ -155,7 +156,7 @@ public class Main extends IterativeRobot {
     public void updateDashboard() {
         SmartDashboard.putNumber("Shooter Actual Velocity", shooter.getVelocity());     //shooter current vel
         SmartDashboard.putNumber("Shooter Set Velocity", shooter.getShooterSetSpeed()); //Shooter set vel
-        SmartDashboard.putNumber("Arm Actual Position", arm.getActual());               //arm actual pos
+    SmartDashboard.putNumber("Arm Actual Pos`   on", arm.getActual());               //arm actual pos
         SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());                //arm set pos
         SmartDashboard.putNumber("Arm offset", arm.getActual()-Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
         SmartDashboard.putNumber("Drive Yaw", drive.getYaw());                          //Drivetrain yaw angle
