@@ -62,17 +62,17 @@ public class Constants {
     
     //Arm constants
     public static final int ARM_ID = 5;     //CAN ID
-    public static final double ARM_P = 700; //PID constants
+    public static final double ARM_P = 800; //PID constants
     public static final double ARM_I = .00010;
     public static final double ARM_D = 0.0;
     
     
     public static final double ARM_LOWER_LIM = 4.78;//5.185 <-pre spring hook limit //is actually vertical most limit
-    public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.315;
+    public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.75;
     public static final double ARM_MANUAL_INPUT_SCALAR = .015;   
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
-    public static double STOW_UP     = ARM_UPPER_LIM-1.42;
+    public static double STOW_UP     = ARM_LOWER_LIM+.4;
     public static double INTAKE_LOAD = STOW_UP;
     public static double HUMAN_LOAD  = 5.728;
     public static double HIGH_SHOT   = 5.973;

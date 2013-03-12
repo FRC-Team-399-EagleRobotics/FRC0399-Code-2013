@@ -15,7 +15,8 @@ import org.team399.y2013.robot.Systems.Intake;
 import org.team399.y2013.robot.Systems.Shooter;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.team399.y2013.Utilities.GamePad;
-import org.team399.y2013.robot.Autonomous.Shoot3Auton;
+import org.team399.y2013.robot.Autonomous.Shoot3AutonHigh;
+import org.team399.y2013.robot.Autonomous.Shoot3AutonMid;
 import org.team399.y2013.robot.Systems.Climber;
 
 /**
@@ -57,7 +58,11 @@ public class Main extends IterativeRobot {
     }
 
     public void autonomousInit() {
-        Shoot3Auton.start();
+        if(auton == 0) {
+            Shoot3AutonHigh.start();
+        } else if(auton == 1) {
+            Shoot3AutonMid.start();
+        }
         arm.setPointAngle(Constants.MID_SHOT);
     }
     
@@ -66,10 +71,15 @@ public class Main extends IterativeRobot {
      */
     public void autonomousPeriodic() {
         //arm.setPointAngle(Constants.MID_SHOT);
-        Shoot3Auton.run();
+        if(auton == 0) {
+            Shoot3AutonHigh.run();
+        } else if(auton == 1) {
+            Shoot3AutonMid.run();
+        }
         
     }
 
+    int auton = 0;
     public void disabledPeriodic() {
         arm.setPointAngle(5.18);    //Set arm setpoint to stowed up when disabled
         updateDashboard();          //Update diagnostic dashboard
@@ -80,6 +90,14 @@ public class Main extends IterativeRobot {
         arm.setPIDConstants(SmartDashboard.getNumber("ARM_P", Constants.ARM_P),
                             SmartDashboard.getNumber("ARM_I", Constants.ARM_I),
                             SmartDashboard.getNumber("ARM_D", Constants.ARM_D));
+        if(leftJoy.getRawButton(1)) {
+            auton = 0;
+            SmartDashboard.putString("Auton", "HIGH");
+        } else if(rightJoy.getRawButton(1)){
+            auton = 1;
+            SmartDashboard.putString("Auton", "MID");
+        }
+        
     }
 
     /**
@@ -143,7 +161,7 @@ public class Main extends IterativeRobot {
         } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN) || rightJoy.getRawButton(2)) {
             armSet = Constants.ARM_UPPER_LIM;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
-            armSet = Constants.MID_SHOT;
+            armSet = Constants.MID_SHOT+.05;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.STOW_UP;
         } else {
