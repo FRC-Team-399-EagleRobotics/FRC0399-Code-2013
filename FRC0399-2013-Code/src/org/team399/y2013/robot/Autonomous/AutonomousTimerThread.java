@@ -72,7 +72,8 @@ public class AutonomousTimerThread extends Thread{
      * @return 
      */
     public boolean isWithinTime(long timeStart, long timeEnd) {
-        return timeElapsed >= timeStart && timeElapsed <= timeEnd;
+        long elapsed = get();
+        return elapsed >= timeStart && elapsed <= timeEnd;
     }
     
     /**
@@ -81,9 +82,10 @@ public class AutonomousTimerThread extends Thread{
     public void run() {
         startTime = System.currentTimeMillis();
         
-        timeElapsed = 0;
+        set(0);
         while(running) {
             set(System.currentTimeMillis() - startTime);
+            try{Thread.sleep(10);}catch(ThreadInterruptedException TIE){} // delay so thread doesn't consume all CPU power
         }
     }
     
