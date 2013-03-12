@@ -12,6 +12,7 @@ package org.team399.y2013.robot.Autonomous;
 public class AutonomousTimerThread extends Thread{
     private long startTime = 0, timeElapsed = 0;
     private boolean running = false;
+    private Object synch = new Object(); // Used for thread synchronization
     
     /**
      * Constructor
@@ -43,12 +44,24 @@ public class AutonomousTimerThread extends Thread{
         stop();
     }
     
+    private void set(long elapsed) {
+        synchronized(synch)
+        {
+          timeElapsed =  elapsed;
+        }
+    }
+    
     /**
      * Return the time elapsed since start
      * @return 
      */
-    public synchronized long get() {
-        return timeElapsed;
+    public long get() {
+        long elapsed;
+        synchronized(synch)
+        {
+            elapsed = timeElapsed;
+        }
+        return elapsed;
     }
     
     /**
@@ -70,7 +83,7 @@ public class AutonomousTimerThread extends Thread{
         
         timeElapsed = 0;
         while(running) {
-            timeElapsed = System.currentTimeMillis() - startTime;
+            set(System.currentTimeMillis() - startTime);
         }
     }
     
