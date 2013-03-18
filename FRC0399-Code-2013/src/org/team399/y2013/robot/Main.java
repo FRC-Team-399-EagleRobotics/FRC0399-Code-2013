@@ -147,7 +147,6 @@ public class Main extends IterativeRobot {
                     (drive.twoStickToTurning(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)), 
                      drive.twoStickToThrottle(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)));
         }
-        //Test comment. ignore
         drive.setShifter(rightJoy.getRawButton(1));
         operator();
     }
