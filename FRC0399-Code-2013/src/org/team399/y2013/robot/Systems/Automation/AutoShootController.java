@@ -34,7 +34,7 @@ public class AutoShootController {
     public void run(double shooterSpeed, boolean wantShoot) {
         currentTime = System.currentTimeMillis();
         
-        //todo: run shooter from here. not sure I still want to do that with the way main is set up
+        m_shooter.setShooterSpeed(shooterSpeed);    //Be careful with conflicting calls...
         if (wantShoot) {
             if (isDiscStaged && isKickerLoaded && isReady) {
                 beginShotTime = System.currentTimeMillis();
@@ -52,12 +52,16 @@ public class AutoShootController {
             m_feeder.setKicker(Constants.KICKER_OUT);
             m_feeder.setRoller(0);
             isDiscStaged = true;
-        } else if (currentTime - beginShotTime < kickerResetDelay && !isKickerLoaded) {
+        } else if (currentTime - beginShotTime < kickerResetDelay + feedToRollerDelay
+                && currentTime - beginShotTime > feedToRollerDelay
+                && !isKickerLoaded) {
             m_feeder.setKicker(Constants.KICKER_IN);
             isKickerLoaded = true;
-        } else if (currentTime - beginShotTime < feedToKickerDelay && !isReady) {
+        } else if (currentTime - beginShotTime < feedToKickerDelay + feedToRollerDelay + kickerResetDelay 
+                && currentTime - beginShotTime > kickerResetDelay + feedToRollerDelay
+                && !isReady) {
             m_feeder.setRoller(1.0);
-            isReady = true;
+            isReady = m_shooter.isAtTargetSpeed();
         }
 
     }

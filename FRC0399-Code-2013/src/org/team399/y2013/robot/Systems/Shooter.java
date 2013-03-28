@@ -336,7 +336,7 @@ public class Shooter implements Runnable {
         } else {
             output = ((error > 0) ? -maxSpeed*speedScalar : -feedFwd * kT);
         }
-        indicator.set((Math.abs(error) < 1000));
+        indicator.set(isAtTargetSpeed());
         
         
 
@@ -373,7 +373,7 @@ public class Shooter implements Runnable {
      * @return a flag indicating shooter is at target speed
      */
     public synchronized boolean isAtTargetSpeed() {
-        return Math.abs(error) < 300;
+        return (Math.abs(error) < 700) || !isClosedLoop;
     }
 
     /**
