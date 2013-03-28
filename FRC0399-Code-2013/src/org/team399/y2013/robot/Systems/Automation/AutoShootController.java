@@ -43,6 +43,10 @@ public class AutoShootController {
                 isReady = false;
             }
             shootOneDisc();
+        } else {
+            isDiscStaged = false;
+            isKickerLoaded = false;
+            isReady = false;
         }
 
     }
