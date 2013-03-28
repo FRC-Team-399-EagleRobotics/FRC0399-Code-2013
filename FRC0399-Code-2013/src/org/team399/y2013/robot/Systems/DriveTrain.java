@@ -19,7 +19,7 @@ public class DriveTrain {
     private Talon m_leftA, m_leftB, m_rightA, m_rightB;
     private Gyro yaw = new Gyro(2);
     private Gyro pitch = null;// new Gyro(3);
-    private Solenoid shifter = new Solenoid(4);
+    private Solenoid shifter = new Solenoid(Constants.SHIFTER_PORT);
     private final double WHEEL_DIA = Constants.WHEEL_DIAMETER;
     boolean gear = true;
 
@@ -51,10 +51,10 @@ public class DriveTrain {
         if (Math.abs(rightPWM) < .1) {
             rightPWM = 0;
         }
-        m_leftA.set(-leftPWM);
-        m_leftB.set(-leftPWM);
-        m_rightA.set(rightPWM);
-        m_rightB.set(rightPWM);
+        m_leftA.set(rightPWM);
+        m_leftB.set(rightPWM);
+        m_rightA.set(-leftPWM);
+        m_rightB.set(-leftPWM);
     }
     private double old_wheel = 0.0;
     private double neg_inertia_accumulator = 0.0;
@@ -65,7 +65,7 @@ public class DriveTrain {
         double angular_power;
         double linear_power;
         double wheelNonLinearity;
-        boolean quickTurn = Math.abs(throttle) < .25;//Math.abs(wheel) > .375 &&
+        boolean quickTurn = Math.abs(throttle) < .05;//Math.abs(wheel) > .375 &&
         
 
         double neg_inertia = wheel - old_wheel;
@@ -104,6 +104,7 @@ public class DriveTrain {
                 sensitivity = .9 - (.9 - sensitivity) / Math.abs(throttle);
             }
         }
+        neg_inertia_scalar *= .375;
         double neg_inertia_power = neg_inertia * neg_inertia_scalar;
         if (Math.abs(throttle) >= 0.05 || quickTurn) {
             neg_inertia_accumulator += neg_inertia_power;

@@ -30,7 +30,7 @@ public class Shooter implements Runnable {
     private CANJaguar shooterA = null;
     private CANJaguar shooterB = null;
     private CANJaguar shooterC = null;
-    private Solenoid indicator = new Solenoid(5);
+    private Solenoid indicator = new Solenoid(Constants.SHOOTER_INDICATOR_PORT);
     private boolean running = false;
     private boolean isClosedLoop = true;
     private boolean initialized = false;
@@ -317,9 +317,7 @@ public class Shooter implements Runnable {
         velocity = rate;
         error = rate-setpoint;	//Calculate error
         double output = 0.0;				//initialize output
-        System.out.println("Setpoint: " + setpoint);
-        System.out.println("Rate:     " + rate);
-        System.out.println("Error:    " + error);
+        
 
         double feedFwd;
         feedFwd = (Math.abs(setpoint) / kV);
@@ -339,6 +337,7 @@ public class Shooter implements Runnable {
             output = ((error > 0) ? -maxSpeed*speedScalar : -feedFwd * kT);
         }
         indicator.set((Math.abs(error) < 1000));
+        
         
 
         
@@ -392,6 +391,25 @@ public class Shooter implements Runnable {
      */
     private double fromVolts(double input) {
         return input / 12.0;
+    }
+    
+    public double getCurrent(int motor) {
+        double answer = 0;
+        CANJaguar thisJag = null;
+        if(motor == 0) {
+            thisJag = shooterA;
+        } else if(motor == 1) {
+            thisJag = shooterB;
+        } else if(motor == 2) {
+            thisJag = shooterC;
+        }
+        try {
+            answer = thisJag.getOutputCurrent();
+        } catch (Throwable e) {
+                System.err.println("CAN ERROR");
+                System.out.println(e);
+        }
+        return answer;
     }
 
     /**

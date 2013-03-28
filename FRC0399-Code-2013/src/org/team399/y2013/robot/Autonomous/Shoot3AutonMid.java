@@ -34,7 +34,14 @@ public class Shoot3AutonMid {
         elapsedTime = System.currentTimeMillis() - start;
 
         if (!finished) {
-            Main.arm.setPointRotations(Constants.ARM_MID_SHOT + .1); //add .1 to make it mid
+Main.feeder.setKicker(Constants.KICKER_OUT);
+            Main.feeder.setBelt(0);
+            Timer.delay(.75);
+            
+            Main.feeder.setKicker(Constants.KICKER_IN);
+            Timer.delay(.25);
+            
+            Main.arm.setPointRotations(Constants.ARM_MID_SHOT);
             Timer.delay(1.85);
             
             Main.feeder.setBelt(.5);

@@ -36,6 +36,7 @@ public class Constants {
     public static final double YAW_D = 0;
     public static final boolean HIGH_GEAR = true;
     public static final boolean LOW_GEAR = true;
+    public static final int SHIFTER_PORT = 8;
     
     //Climber Constants:
     public static final int WINCH_PORT = 5;
@@ -49,10 +50,10 @@ public class Constants {
     public static final boolean KICKER_OUT = true;
     public static final boolean KICKER_IN = false;
     
-    public static final boolean FLAP_OUT = true;
-    public static final boolean FLAP_IN = false;
-    public static final int FLAP_PORTA = 6;
-    public static final int FLAP_PORTB = 7;
+    public static final boolean FLAP_OUT = false;
+    public static final boolean FLAP_IN = true;
+    public static final int FLAP_PORTA = 4;
+    public static final int FLAP_PORTB = 3;
     
     
     
@@ -67,9 +68,10 @@ public class Constants {
     public static final int SHOOTER_C_ID = 4;
     public static final byte SHOOTER_SYNC_GROUP = 2;
     public static final double SHOOTER_KT = 1.125;    //Closed loop tuning constant
-    public static final double SHOOTER_KO = 1.0;    //Open loop tuning constant
+    public static final double SHOOTER_KO = 1.375;    //Open loop tuning constant
     public static final double SHOOTER_KV         = 1608.0; //Motor rpm/v constant
     public static final double SHOOTER_GEAR_RATIO = 0.44642857142;  //Shooter gear ratio
+    public static final int SHOOTER_INDICATOR_PORT = 5;
     
     public static final double SHOOTER_SHOT      = 8600;
     public static final double SHOOTER_INTAKE    =-3000;
@@ -83,18 +85,19 @@ public class Constants {
     public static final double ARM_D = 0.0;
     public static final double DEGREES_PER_TURN = 50.0;
     
-    public static final double ARM_LOWER_LIM = 5.092;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
-    public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.3;
+    public static final double ARM_LOWER_LIM = 4.65;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
+    public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.65;
     public static final double ARM_MANUAL_INPUT_SCALAR = .015;   
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
-    public static double ARM_STOW_UP     = ARM_LOWER_LIM+.088;
+    public static double ARM_STOW_UP     = ARM_LOWER_LIM+.37;
     public static double ARM_INTAKE_LOAD = ARM_STOW_UP;
-    public static double ARM_HUMAN_LOAD  = 5.728;
-    public static double ARM_HIGH_SHOT   = 5.973;
-    public static double ARM_MID_SHOT    = 6.1;
-    public static double ARM_STOW_DOWN   = ARM_UPPER_LIM-.01;
+    public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.66;
+    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.34;
+    public static double ARM_MID_SHOT    = ARM_LOWER_LIM + 1.38;
+    public static double ARM_STOW_DOWN   = ARM_HUMAN_LOAD;
     public static double ARM_LOW_SHOT    = ARM_STOW_DOWN-0.5;
+    public static double ARM_CENTER_OFFSET = .02;
     
     
     public static long AUTO_SHOOT_MIN_PERIOD = 375;

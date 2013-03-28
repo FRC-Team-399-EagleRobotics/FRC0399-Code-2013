@@ -91,6 +91,22 @@ public class Arm {
             arm = initializeArmJaguar(arm, ARM_ID);
         }
     }
+    
+    public void setBrake(boolean wantBrake) {
+        
+        try {
+            if(wantBrake) {
+                arm.configNeutralMode(CANJaguar.NeutralMode.kBrake);
+            } else {
+                arm.configNeutralMode(CANJaguar.NeutralMode.kCoast);
+            }
+        } catch (Throwable t) {
+            System.err.println("ARM CAN Error in brake config");
+            System.out.println(t);
+
+            arm = initializeArmJaguar(arm, ARM_ID);
+        }
+    }
 
     public void setPIDConstants(double P, double I, double D) {
         ARM_P = P;

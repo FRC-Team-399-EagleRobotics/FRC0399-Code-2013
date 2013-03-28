@@ -33,11 +33,28 @@ public class Shoot3AutonHigh {
         elapsedTime = System.currentTimeMillis() - start;
 
         if (!finished) {
-            Main.arm.setPointRotations(Constants.ARM_MID_SHOT + .05); //add .1 to make it mid
-            Timer.delay(1.85);
+            Main.arm.setPointRotations(Constants.ARM_HIGH_SHOT);
+            Timer.delay(1);
             
-            Main.feeder.setBelt(.5);
+            Main.feeder.setKicker(Constants.KICKER_OUT);
+            Main.feeder.setBelt(0);
+            Timer.delay(.75);
+            
+            Main.feeder.setKicker(Constants.KICKER_IN);
             Timer.delay(.25);
+            
+            Main.feeder.setBelt(1.0);
+            Timer.delay(1.25);
+            
+            Main.feeder.setKicker(Constants.KICKER_OUT);
+            Main.feeder.setBelt(0);
+            Timer.delay(.75);
+            
+            Main.feeder.setKicker(Constants.KICKER_IN);
+            Timer.delay(.25);
+            
+            Main.feeder.setBelt(1.0);
+            Timer.delay(1.25);
             
             Main.feeder.setKicker(Constants.KICKER_OUT);
             Main.feeder.setBelt(0);

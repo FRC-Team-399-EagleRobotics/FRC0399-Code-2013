@@ -95,8 +95,8 @@ public class GamePad {
 
         final int UP = 0;
         final int DOWN = 1;
-        final int LEFT = 3;
-        final int RIGHT = 2;
+        final int LEFT = 2;
+        final int RIGHT = 3;
     }
 
     /**

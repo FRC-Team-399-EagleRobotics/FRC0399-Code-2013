@@ -58,8 +58,13 @@ public class Main extends IterativeRobot {
         comp.start();
         arm.setEnabled(true);
     }
+    
+    public void disabledInit() {
+        arm.setBrake(true);
+    }
 
     public void autonomousInit() {
+        arm.setBrake(true);
         if (auton == 0) {
             Shoot3AutonHigh.start();
         } else if (auton == 1) {
@@ -82,6 +87,7 @@ public class Main extends IterativeRobot {
     int auton = 0;
 
     public void disabledPeriodic() {
+        System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();          //Update diagnostic dashboard
 //
@@ -106,6 +112,10 @@ public class Main extends IterativeRobot {
         }
 
     }
+    
+    public void teleopInit() {
+        arm.setBrake(true);
+    }
 
     /**
      * This function is called periodically during operator control
@@ -113,7 +123,8 @@ public class Main extends IterativeRobot {
     public void teleopPeriodic() {
         Timer.delay(.001);
         updateDashboard();  //Update diagnostic dashboard
-
+        
+        System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
         } else if (leftJoy.getRawButton(7)) {
@@ -183,21 +194,37 @@ public class Main extends IterativeRobot {
         
         if (operatorJoy.getButton(8) || leftJoy.getRawButton(1)) {
             feeder.setFlapper(Constants.FLAP_OUT);
-        }else{
+        } else {
             feeder.setFlapper(Constants.FLAP_IN);
         }
 
         if (operatorJoy.getDPad(GamePad.DPadStates.LEFT)) {
-            armSet = Constants.ARM_HUMAN_LOAD;
+            armSet = Constants.ARM_HIGH_SHOT - Constants.ARM_CENTER_OFFSET;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN) || rightJoy.getRawButton(2)) {
             armSet = Constants.ARM_UPPER_LIM;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
-            armSet = Constants.ARM_MID_SHOT + .05;
+            armSet = Constants.ARM_MID_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.ARM_STOW_UP;
+        } else if(rightJoy.getRawButton(3)) {
+            armSet = Constants.ARM_LOWER_LIM;
+        } else if (operatorJoy.getButton(9)) {
+            armSet = Constants.ARM_HUMAN_LOAD;
         } else {
-            armSet = arm.getSetpoint() + manScalar * EagleMath.signum(operatorJoy.getLeftY());
+            double fineAdjust = (Constants.ARM_MANUAL_INPUT_SCALAR/1.75);
+            if(Math.abs(operatorJoy.getRightY()) > .2) {
+                fineAdjust *= operatorJoy.getRightY();
+            } else {
+                fineAdjust = 0;
+            }
+            
+            if(Math.abs(operatorJoy.getLeftY()) > .2) {
+                fineAdjust = 0;
+            }
+            armSet = arm.getSetpoint() + manScalar * EagleMath.signum(operatorJoy.getLeftY()) + fineAdjust;
         }
+        
+        
         
         
         shooter.setShooterSpeed(shooterSet);
@@ -211,5 +238,9 @@ public class Main extends IterativeRobot {
         SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());                //arm set pos
         SmartDashboard.putNumber("Arm offset", arm.getActual() - Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
         SmartDashboard.putNumber("Drive Yaw", drive.getYaw());                          //Drivetrain yaw angle
+        SmartDashboard.putNumber("Shooter A current", shooter.getCurrent(0));
+        SmartDashboard.putNumber("Shooter B current", shooter.getCurrent(1));
+        SmartDashboard.putNumber("Shooter C current", shooter.getCurrent(2));
+        
     }
 }
