@@ -40,6 +40,7 @@ public class Constants {
     
     //Climber Constants:
     public static final int WINCH_PORT = 5;
+    public static final int LIMIT_SWITCH_PORT = 5;
     public static final double CLIMBER_UP_SPEED = 1.0;
     public static final double CLIMBER_DOWN_SPEED = -1.0;
     
@@ -68,7 +69,7 @@ public class Constants {
     public static final int SHOOTER_C_ID = 4;
     public static final byte SHOOTER_SYNC_GROUP = 2;
     public static final double SHOOTER_KT = 1.125;    //Closed loop tuning constant
-    public static final double SHOOTER_KO = 1.375;    //Open loop tuning constant
+    public static final double SHOOTER_KO = 1.5;    //Open loop tuning constant
     public static final double SHOOTER_KV         = 1608.0; //Motor rpm/v constant
     public static final double SHOOTER_GEAR_RATIO = 0.44642857142;  //Shooter gear ratio
     public static final int SHOOTER_INDICATOR_PORT = 5;
@@ -80,25 +81,26 @@ public class Constants {
     
     //Arm constants
     public static final int ARM_ID = 5;     //CAN ID
-    public static final double ARM_P = 800; //PID constants
+    public static final double ARM_P = 850; //PID constants
     public static final double ARM_I = .00010;
     public static final double ARM_D = 0.0;
     public static final double DEGREES_PER_TURN = 50.0;
     
     public static final double ARM_LOWER_LIM = 4.65;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
     public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.65;
-    public static final double ARM_MANUAL_INPUT_SCALAR = .015;   //In theory .02 - .025 should be the optimal range for the new 550
+    public static final double ARM_MANUAL_INPUT_SCALAR = .0225;   //In theory .02 - .025 should be the optimal range for the new 550
+    //was .015
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
     public static double ARM_STOW_UP     = ARM_LOWER_LIM+.37;
     public static double ARM_INTAKE_LOAD = ARM_STOW_UP;
     public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.66;
-    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.34;
-    public static double ARM_MID_SHOT    = ARM_LOWER_LIM + 1.38;
+    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.342;
+    public static double ARM_MID_SHOT    = ARM_LOWER_LIM + 1.42;
     public static double ARM_STOW_DOWN   = ARM_HUMAN_LOAD;
     public static double ARM_LOW_SHOT    = ARM_STOW_DOWN-0.5;
-    public static double ARM_CENTER_OFFSET = .02;
-    
+    public static double ARM_CENTER_OFFSET = .0;
+    public static double ARM_AUTON_SHOT    = ARM_LOWER_LIM + 1.37153;
     
     public static long AUTO_SHOOT_MIN_PERIOD = 375;
     

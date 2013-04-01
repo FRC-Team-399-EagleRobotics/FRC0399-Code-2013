@@ -53,7 +53,7 @@ public class Shoot3AutonHigh {
         elapsedTime = System.currentTimeMillis() - start;
 
         if (!finished) {
-            Main.arm.setPointRotations(Constants.ARM_HIGH_SHOT);
+            Main.arm.setPointRotations(Constants.ARM_AUTON_SHOT);
             Timer.delay(waitForArmDelay + (timeDelay / 1000));
 
             for(int i = 0; i < 5; i++) {
@@ -64,7 +64,8 @@ public class Shoot3AutonHigh {
             Timer.delay(waitForArmDelay);
             
             Main.drive.setShifter(Constants.LOW_GEAR);
-            Main.drive.tankDrive(-.5, -.5);
+            Main.drive.tankDrive(.5, .5);
+            Timer.delay(3.0);
 
             finished = true;
         }

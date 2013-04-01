@@ -18,9 +18,9 @@ public class AutoShootController {
 
     private Shooter m_shooter = null;
     private Feeder m_feeder = null;
-    double feedToRollerDelay = .5;
+    double feedToRollerDelay = .25;
     double kickerResetDelay = .25;
-    double feedToKickerDelay = 1.0;
+    double feedToKickerDelay = .5;
     boolean isDiscStaged = false;
     boolean isKickerLoaded = false;
     boolean isReady = false;

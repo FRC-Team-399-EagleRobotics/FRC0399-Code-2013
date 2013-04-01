@@ -16,75 +16,75 @@ public class Shoot3AutonMid {
 
     static AutonomousTimer timer = new AutonomousTimer();
     private static long elapsedTime = 0, start = 0;
+    private static long timeDelay = 0;
+    static double waitForArmDelay = .75;
+    static double feedToRollerDelay = .5;
+    static double kickerResetDelay = .25;
+    static double feedToKickerDelay = 1.0;
+    
 
     public static void start() {
         start = System.currentTimeMillis();
-        //timer.start();
         Main.shooter.start();
         Main.shooter.setShooterSpeed(7900);
-        Main.arm.setPointRotations(Constants.ARM_MID_SHOT);
+              Main.arm.setPointRotations(Constants.ARM_MID_SHOT -.01);
         Main.arm.setEnabled(true);
         System.out.println("Init'd auton");
         finished = false;
     }
+
+    public static void start(long delay) {
+        timeDelay = delay;
+        start = System.currentTimeMillis();
+        Main.shooter.start();
+        Main.shooter.setShooterSpeed(7900);
+        Main.arm.setPointRotations(Constants.ARM_MID_SHOT -.01);
+        Main.arm.setEnabled(true);
+        System.out.println("Init'd auton");
+        finished = false;
+        timer.start();
+    }
     static boolean finished = false;
 
     public static void run() {
+
+
         System.out.println("Running auton, Timer: " + timer.get());
         elapsedTime = System.currentTimeMillis() - start;
 
         if (!finished) {
-Main.feeder.setKicker(Constants.KICKER_OUT);
-            Main.feeder.setRoller(0);
-            Timer.delay(.75);
-            
-            Main.feeder.setKicker(Constants.KICKER_IN);
-            Timer.delay(.25);
-            
-            Main.arm.setPointRotations(Constants.ARM_MID_SHOT);
-            Timer.delay(1.85);
-            
-            Main.feeder.setRoller(.5);
-            Timer.delay(.25);
-            
-            Main.feeder.setKicker(Constants.KICKER_OUT);
-            Main.feeder.setRoller(0);
-            Timer.delay(.75);
-            
-            Main.feeder.setKicker(Constants.KICKER_IN);
-            Timer.delay(.25);
-            
-            Main.feeder.setRoller(1.0);
-            Timer.delay(1.25);
-            
-            Main.feeder.setKicker(Constants.KICKER_OUT);
-            Main.feeder.setRoller(0);
-            Timer.delay(.75);
-            
-            Main.feeder.setKicker(Constants.KICKER_IN);
-            Timer.delay(.25);
-            
-            Main.feeder.setRoller(1.0);
-            Timer.delay(1.25);
-            
-            Main.feeder.setKicker(Constants.KICKER_OUT);
-            Main.feeder.setRoller(0);
-            Timer.delay(.75);
-            
-            Main.feeder.setKicker(Constants.KICKER_IN);
-            Timer.delay(.25);
-            
-            Main.feeder.setRoller(1.0);
-            Timer.delay(1.25);
+            Main.arm.setPointRotations(Constants.ARM_MID_SHOT -.01);
+            Timer.delay(waitForArmDelay + (timeDelay / 1000));
+
+            for(int i = 0; i < 5; i++) {
+                shootOneDisc();
+            }
             
             Main.arm.setPointRotations(Constants.ARM_STOW_UP);
-            Timer.delay(1.25);
+            Timer.delay(waitForArmDelay);
             
+            Main.drive.setShifter(Constants.LOW_GEAR);
+            Main.drive.tankDrive(.5, .5);
+            Timer.delay(3.0);
+
             finished = true;
         }
 
         Main.drive.tankDrive(0, 0);
         Main.feeder.setRoller(0);
         Main.shooter.setShooterSpeed(0);
+
+    }
+
+    public static void shootOneDisc() {
+        Main.feeder.setKicker(Constants.KICKER_OUT);
+        Main.feeder.setRoller(0);
+        Timer.delay(feedToRollerDelay);
+
+        Main.feeder.setKicker(Constants.KICKER_IN);
+        Timer.delay(kickerResetDelay);
+
+        Main.feeder.setRoller(1.0);
+        Timer.delay(feedToKickerDelay);
     }
 }

@@ -4,8 +4,8 @@
  */
 package org.team399.y2013.robot.Systems;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Talon;
-import org.team399.y2013.robot.Constants;
 
 /**
  *
@@ -13,12 +13,18 @@ import org.team399.y2013.robot.Constants;
  */
 public class Climber {
     private Talon winch;
+    private DigitalInput limit;
     
-    public Climber(int port) {
+    public Climber(int port, int limitSwitch) {
         winch = new Talon(port);
+        limit = new DigitalInput(limitSwitch);
     }
     
     public void set(double value) {
         winch.set(value);
+    }
+    
+    public boolean getSwitch() {
+        return limit.get();
     }
 }

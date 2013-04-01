@@ -109,7 +109,7 @@ public class DriveTrain {
                 sensitivity = .9 - (.9 - sensitivity) / Math.abs(throttle);
             }
         }
-        neg_inertia_scalar *= .375;
+        neg_inertia_scalar *= .4;
         double neg_inertia_power = neg_inertia * neg_inertia_scalar;
         if (Math.abs(throttle) >= 0.05 || quickTurn) {
             neg_inertia_accumulator += neg_inertia_power;

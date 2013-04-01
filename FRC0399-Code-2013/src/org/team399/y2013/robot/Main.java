@@ -18,6 +18,7 @@ import org.team399.y2013.Utilities.GamePad;
 import org.team399.y2013.Utilities.PulseTriggerBoolean;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonHigh;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonMid;
+import org.team399.y2013.robot.Systems.Automation.AutoShootController;
 import org.team399.y2013.robot.Systems.Climber;
 
 /**
@@ -45,9 +46,10 @@ public class Main extends IterativeRobot {
             );
     public static Intake intake = new Intake(Constants.INTAKE_MOTOR,
             Constants.INTAKE_SENSOR);
-    public static Climber climber = new Climber(Constants.WINCH_PORT);
+    public static Climber climber = new Climber(Constants.WINCH_PORT, Constants.LIMIT_SWITCH_PORT);
     public static Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
             Constants.COMPRESSOR_RELAY);
+    public static AutoShootController autoshoot = new AutoShootController(shooter, feeder);
 
     /**
      * This function is run when the robot is first started up and should be
@@ -137,22 +139,22 @@ public class Main extends IterativeRobot {
         
         double leftAdjust = 0;
         double rightAdjust = 0;
-        if(leftJoy.getRawButton(4)) {
-            leftAdjust = .25;
-            rightAdjust = -.25;
-        }
-        if(leftJoy.getRawButton(5)) {
-            leftAdjust = -.25;
-            rightAdjust = .25;
-        }
-        if(leftJoy.getRawButton(2)) {
-            leftAdjust = .25;
-            rightAdjust = .25;
-        }
-        if(leftJoy.getRawButton(3)) {
-            leftAdjust = -.25;
-            rightAdjust = -.25;
-        }
+//        if(leftJoy.getRawButton(4)) {
+//            leftAdjust = .25;
+//            rightAdjust = -.25;
+//        }
+//        if(leftJoy.getRawButton(5)) {
+//            leftAdjust = -.25;
+//            rightAdjust = .25;
+//        }
+//        if(leftJoy.getRawButton(2)) {
+//            leftAdjust = .25;
+//            rightAdjust = .25;
+//        }
+//        if(leftJoy.getRawButton(3)) {
+//            leftAdjust = -.25;
+//            rightAdjust = -.25;
+//        }
         
         boolean shiftButton = rightJoy.getRawButton(1);
         drive.setShifter(shiftButton);
@@ -168,7 +170,8 @@ public class Main extends IterativeRobot {
         operator();
     }
     double armSet = Constants.ARM_STOW_UP;
-
+    PulseTriggerBoolean adjustUpButton = new PulseTriggerBoolean();
+    PulseTriggerBoolean adjustDnButton = new PulseTriggerBoolean();
     public void operator() {
 
         double manScalar = SmartDashboard.getNumber("ARM_MAN_SCAL", Constants.ARM_MANUAL_INPUT_SCALAR);
@@ -180,8 +183,11 @@ public class Main extends IterativeRobot {
         } else {
             feeder.setRoller(0);
         }
+        boolean wantShoot = operatorJoy.getButton(6);
         
-        if (operatorJoy.getButton(6)) {
+        if (wantShoot) {
+            //comment out feeder kicker lines for autoshoot
+            
             feeder.setKicker(Constants.KICKER_OUT);
         } else {
             feeder.setKicker(Constants.KICKER_IN);
@@ -190,6 +196,7 @@ public class Main extends IterativeRobot {
         boolean isShooting = false; //Flag to indicate operator is running the shooter
         
         double shooterSet = Constants.SHOOTER_STOP;
+        
         if (operatorJoy.getButton(1)) {
             isShooting = true;
             shooterSet = 6000.0;
@@ -204,26 +211,31 @@ public class Main extends IterativeRobot {
             shooterSet = Constants.SHOOTER_STOP;
         }
         
+        //autoshoot.run(shooterSet, wantShoot);
+        
         if (operatorJoy.getButton(8) || leftJoy.getRawButton(1)) {
             feeder.setFlapper(Constants.FLAP_OUT);
         } else {
             feeder.setFlapper(Constants.FLAP_IN);
         }
 
+        adjustUpButton.set(operatorJoy.getButton(9));
+        adjustDnButton.set(operatorJoy.getButton(10));
+        
         if (operatorJoy.getDPad(GamePad.DPadStates.LEFT)) {
-            armSet = Constants.ARM_HIGH_SHOT - Constants.ARM_CENTER_OFFSET;
+            armSet = Constants.ARM_HIGH_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN) || rightJoy.getRawButton(2)) {
             armSet = Constants.ARM_UPPER_LIM;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
             armSet = Constants.ARM_MID_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.ARM_STOW_UP;
-        } else if(rightJoy.getRawButton(3)) {
+        } /*else if(rightJoy.getRawButton(3)) {
             armSet = Constants.ARM_LOWER_LIM;
         } else if (operatorJoy.getButton(9)) {
-            armSet = Constants.ARM_HUMAN_LOAD;
-        } else {
-            double fineAdjust = (Constants.ARM_MANUAL_INPUT_SCALAR/1.75);
+            //armSet = Constants.ARM_HUMAN_LOAD;
+        } */else {
+            double fineAdjust = (Constants.ARM_MANUAL_INPUT_SCALAR);
 //            if(Math.abs(operatorJoy.getRightY()) > .2) {
 //                fineAdjust *= operatorJoy.getRightY();
 //            } else {
@@ -231,16 +243,29 @@ public class Main extends IterativeRobot {
 //            }
 //            
             double fineAdjustInput = 0;
+            double coarseAdjust = manScalar * EagleMath.signum(operatorJoy.getLeftY());
             if(isShooting) {
-                fineAdjustInput = operatorJoy.getLeftY();
+                fineAdjustInput = 0;
+                //coarseAdjust = 0;;
+                fineAdjust = 0;
             } else {
                 fineAdjustInput = operatorJoy.getRightY();
             }
-            fineAdjustInput = EagleMath.deadband(fineAdjustInput, .05);
+            
+            if(adjustUpButton.get()) {
+                fineAdjustInput = -.875;
+            } else if(adjustDnButton.get()) {
+                fineAdjustInput = .875;
+            } else {
+                fineAdjustInput = 0;
+            }
+            fineAdjust *= EagleMath.deadband(fineAdjustInput, .05);
             
             
-            armSet = arm.getSetpoint() + manScalar * EagleMath.signum(operatorJoy.getLeftY()) + fineAdjust;
+            
+            armSet = arm.getSetpoint() + coarseAdjust + fineAdjust;
         }
+        
         
         shooter.setShooterSpeed(shooterSet);
         arm.setPointRotations(armSet);
@@ -252,13 +277,17 @@ public class Main extends IterativeRobot {
         SmartDashboard.putNumber("Shooter A current", shooter.getCurrent(0));
         SmartDashboard.putNumber("Shooter B current", shooter.getCurrent(1));
         SmartDashboard.putNumber("Shooter C current", shooter.getCurrent(2));
+        SmartDashboard.putBoolean("Shooter IsAtTarget", shooter.isAtTargetSpeed());
         
         SmartDashboard.putNumber("Arm Actual Position", arm.getActual());               //arm actual pos
         SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());                //arm set pos
         SmartDashboard.putNumber("Arm offset", arm.getActual() - Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
         SmartDashboard.putNumber("Arm current", arm.getCurrentOutput());
+        SmartDashboard.putBoolean("Arm CAN fault", arm.getCurrentOutput() == -1);
         
         SmartDashboard.putNumber("Left Drive Output", drive.leftOutput);
         SmartDashboard.putNumber("Right Drive Output", drive.rightOutput);
+        
+        SmartDashboard.putBoolean("Climber upper limit", climber.getSwitch());
     }
 }
