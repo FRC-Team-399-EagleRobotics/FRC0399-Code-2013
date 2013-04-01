@@ -93,13 +93,6 @@ public class Main extends IterativeRobot {
         System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();          //Update diagnostic dashboard
-//
-//        // For safety, require a disable to change shooter and arm tuning constants using SDB
-//        shooter.setTuningConstants(SmartDashboard.getNumber("SHOOTER_KT", Constants.SHOOTER_KT),
-//                SmartDashboard.getNumber("SHOOTER_KO", Constants.SHOOTER_KO));
-//        arm.setPIDConstants(SmartDashboard.getNumber("ARM_P", Constants.ARM_P),
-//                SmartDashboard.getNumber("ARM_I", Constants.ARM_I),
-//                SmartDashboard.getNumber("ARM_D", Constants.ARM_D));
         if (leftJoy.getRawButton(1)) {
             auton = 0;
         } else if (rightJoy.getRawButton(1)) {
@@ -230,11 +223,7 @@ public class Main extends IterativeRobot {
             armSet = Constants.ARM_MID_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.ARM_STOW_UP;
-        } /*else if(rightJoy.getRawButton(3)) {
-            armSet = Constants.ARM_LOWER_LIM;
-        } else if (operatorJoy.getButton(9)) {
-            //armSet = Constants.ARM_HUMAN_LOAD;
-        } */else {
+        } else {
             double fineAdjust = (Constants.ARM_MANUAL_INPUT_SCALAR);
 //            if(Math.abs(operatorJoy.getRightY()) > .2) {
 //                fineAdjust *= operatorJoy.getRightY();
