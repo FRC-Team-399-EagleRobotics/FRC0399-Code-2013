@@ -21,7 +21,7 @@ public class EagleEye extends Thread {
     public Camera cam;
     private Target[] targets;
     private PrintStream m_ps = new PrintStream("[EAGLE-EYE] ");
-    boolean m_run = true;   //Flag to enable/disable execution in the thread
+    boolean m_run = true;   //Flag to wantRefresh/disable execution in the thread
     //Color Thresholds
     Color[] colors = {
         Color.fromRGB(0, 1, 0), //Green color
@@ -29,7 +29,7 @@ public class EagleEye extends Thread {
         Color.fromRGB(0, 0, 1) //blue color
     };
     HSLThreshold[] thresholds = {
-        new HSLThreshold(103, 130, 60, 255, 60, 255), //Green threshold
+        new HSLThreshold(100, 130, 60, 255, 60, 255), //Green threshold
         new HSLThreshold(0, 45, 80, 255, 120, 255), //Red threshold
         new HSLThreshold(200, 240, 80, 255, 120, 255) //Blue threshold
     };
@@ -41,12 +41,10 @@ public class EagleEye extends Thread {
         //TODO: light ring code
         System.out.println("[EAGLE-EYE] Eagle Eye initialized");
     }
-    int colorCount = 0;
-    int loopCount = 0;
     boolean targetsFound = false;
     int colorIndex = 0;
     long timeLastTarget = 0;
-    boolean enable = true;
+    boolean wantRefresh = true;
     boolean idle = false;
     public double framerate = 0;
 
@@ -61,49 +59,39 @@ public class EagleEye extends Thread {
      */
     public void run() {
         init();
-
         while (m_run) {
-            loopCount++;
-            if (cam.freshImage() && enable) {
+            if (cam.freshImage() && wantRefresh) {
                 //m_ps.println("Image Processing started...");
                 long procStartTime = System.currentTimeMillis();
                 targets = ImageProcessor.processImage(cam.getImage(), thresholds[0]);    //Process image from camera using given thresholds
 
                 long timeElapsed = (System.currentTimeMillis() - procStartTime);
-                //m_ps.println("Image processing complete!");
-                //m_ps.println("Image Processing took " + timeElapsed + " ms.");
-                framerate = EagleMath.truncate((1000.0 / (double) timeElapsed), 3);
-                //m_ps.println("Processing Images at " + framerate + " fps");
+                framerate = EagleMath.truncate((1000.0 / (double) timeElapsed), 2);
+                m_ps.println("Processing Images at " + framerate + " fps");
+                
                 if (targets != null && targets.length > 0) {    //If targets are detected
-
                     targetsFound = true;                        //Set flag to true
                     timeLastTarget = System.currentTimeMillis();
                 } else {
                     targetsFound = false;
-                    try {
-                        Thread.sleep(250);      //Sleep for 250ms if no target found initially. keep load down if no targets immediately found
-                    } catch (Exception e) {
-                    }
                 }
+                
+                wantRefresh = false;    //This is for oneshot logic
+                
             } else {
                 framerate = 0;
             }
+            
             try {
                 Thread.sleep(10);
-            } catch (Exception e) {
-            }
+            } catch (Exception e) { }
 
-            if (idle) {
-                try {
-                    Thread.sleep(750);      //Sleep for 750ms if no target found initially. keep load down if no targets immediately found
-                } catch (Exception e) {
-                }
-            }
+
         }
     }
-    
-    public synchronized void enable(boolean en) {
-        enable = en;
+
+    public synchronized void requestNewImage(boolean en) {
+        wantRefresh = en;
     }
 
     public synchronized int getNumberOfTargets() {
@@ -145,7 +133,6 @@ public class EagleEye extends Thread {
      */
     public Target getHighestTarget() {
         //this might be redundant
-
         if (targets == null) {
             return null;// new Target(0,0,0);
         }
@@ -157,5 +144,4 @@ public class EagleEye extends Thread {
         }
         return highest;
     }
-
 }

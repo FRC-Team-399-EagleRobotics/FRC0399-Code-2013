@@ -92,21 +92,21 @@ public class Main extends IterativeRobot {
     public void disabledPeriodic() {
         System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
-        updateDashboard();          //Update diagnostic dashboard
+        updateDashboard();                               //Update diagnostic dashboard
+        
         if (leftJoy.getRawButton(1)) {
             auton = 0;
         } else if (rightJoy.getRawButton(1)) {
             auton = 1;
         }
 
-        if (auton == 0) {
+        if (auton == 0) {                               //Displays selected auton
             SmartDashboard.putString("Auton", "HIGH");
         } else if (auton == 1) {
             SmartDashboard.putString("Auton", "MID");
         } else {
             SmartDashboard.putString("Auton", "INVALID!");
         }
-
     }
     
     public void teleopInit() {
@@ -249,8 +249,6 @@ public class Main extends IterativeRobot {
                 fineAdjustInput = 0;
             }
             fineAdjust *= EagleMath.deadband(fineAdjustInput, .05);
-            
-            
             
             armSet = arm.getSetpoint() + coarseAdjust + fineAdjust;
         }

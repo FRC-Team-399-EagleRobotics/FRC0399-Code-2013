@@ -5,7 +5,6 @@
 package org.team399.y2013.robot.Systems.Imaging;
 
 import com.sun.squawk.util.MathUtils;
-import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.image.BinaryImage;
 import edu.wpi.first.wpilibj.image.ColorImage;
 import edu.wpi.first.wpilibj.image.NIVisionException;
@@ -20,10 +19,9 @@ public class ImageProcessor {
 
     public static final double areaThresh = 1000;
     public static final double rectThresh = 50;
-    public static final double aspectThresh = 0;
+    public static final double aspectThresh = 40;
     public static final int cameraHeight = 240;
     public static final int cameraWidth = 320;
-    public static final double cameraOnTurretHeight = 4.958;
 
     public static double rectangularityScore(double area, double width, double height) {
         // A perfect rectangle will have a score of 100
@@ -34,7 +32,41 @@ public class ImageProcessor {
         return rectangularityScore;
     }
 
+    /**
+     * returns a score from 0 to 100 rating the particle's similarity to the actual target's aspect ratio
+     * @param width
+     * @param height
+     * @return 
+     */
     public static double aspectRatioScore(double width, double height) {
+        //todo: change aspect ratio to Ultimate Ascent targets
+        //high goal target is 54x12 = 4.5
+        //mid goal target is 54x21 = 2.571
+
+        double aspectRatioScore = width / height;
+        aspectRatioScore /= 1.33; // normalize
+        aspectRatioScore = Math.abs(1.0 - aspectRatioScore); //Teepee at 1
+        aspectRatioScore = 100.0 * (1.0 - aspectRatioScore);
+        if (aspectRatioScore > 100) {
+            aspectRatioScore = 100;
+        } else if (aspectRatioScore < 0) {
+            aspectRatioScore = 0;
+        }
+        return aspectRatioScore;
+    }
+
+    /**
+     * Returns an aspect ratio score with the additional parameter of a "perfect aspect ratio"
+     * @param width
+     * @param height
+     * @param targetAspectRatio
+     * @return 
+     */
+    public static double aspectRatioScore(double width, double height, double targetAspectRatio) {
+        //todo: change aspect ratio to Ultimate Ascent targets
+        //high goal target is 54x12 = 4.5
+        //mid goal target is 54x21 = 2.571
+
         double aspectRatioScore = width / height;
         aspectRatioScore /= 1.33; // normalize
         aspectRatioScore = Math.abs(1.0 - aspectRatioScore); //Teepee at 1
@@ -62,10 +94,10 @@ public class ImageProcessor {
         try {
             masked = image.thresholdHSL(thresh.HueLow, thresh.HueHigh,
                     thresh.SatLow, thresh.SatHigh,
-                    thresh.LumLow, thresh.LumHigh);
-            hulled = masked.convexHull(true);
+                    thresh.LumLow, thresh.LumHigh);                     //HSL masked binary image
+            hulled = masked.convexHull(true);                           //Convex Hulledbinary image
             all = hulled.getOrderedParticleAnalysisReports(6);  //Get sorted particle report. sorted in order of size
-            image.free();
+            image.free();   //Free the memory allocated to processed image.
             hulled.free();
             masked.free();
         } catch (NIVisionException e) {
@@ -74,7 +106,7 @@ public class ImageProcessor {
         }
 
 
-        for (int i = 0; i < all.length; i++) {               //Store the targets that pass the size limit
+        for (int i = 0; i < all.length; i++) {              //Store the targets that pass the size limit
             if (all[i].particleArea > areaThresh) {
                 double rectangularityScore =
                         rectangularityScore(all[i].particleArea,
@@ -82,7 +114,7 @@ public class ImageProcessor {
                         all[i].boundingRectHeight);
                 double aspectRatioScore =
                         aspectRatioScore(all[i].boundingRectWidth,
-                        all[i].boundingRectHeight);
+                        all[i].boundingRectHeight, 4.5);            //4.5 is the aspect ratio for the high target
 
                 if (rectangularityScore > rectThresh
                         && aspectRatioScore > aspectThresh) {
@@ -96,7 +128,7 @@ public class ImageProcessor {
         Target[] targets = new Target[rects.size()];
         rects.copyInto(targets);
         if (targets.length == 0) {
-            //System.out.println("[IMG-PROC] No targets found, processor ended");
+            System.out.println("[IMG-PROC] No targets found, processor ended");
             return null;
         }
         return targets;
@@ -153,7 +185,7 @@ public class ImageProcessor {
                 distance = 0;
             }
         }
-        
+
         public Target(int x, int y, int distance) {
             this.x = x;
             this.y = y;

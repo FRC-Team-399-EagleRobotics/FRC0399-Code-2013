@@ -56,8 +56,6 @@ public class Constants {
     public static final int FLAP_PORTA = 4;
     public static final int FLAP_PORTB = 3;
     
-    
-    
     //Intake Constants:
     public static final int INTAKE_MOTOR  = 7;// pre spring hook port 6;
     public static final int INTAKE_SENSOR = 1;
@@ -84,12 +82,13 @@ public class Constants {
     public static final double ARM_P = 850; //PID constants
     public static final double ARM_I = .00010;
     public static final double ARM_D = 0.0;
-    public static final double DEGREES_PER_TURN = 50.0;
+    public static final int ZERO_SWITCH_SENSOR = 14;
+    public static final double DEGREES_PER_TURN = 61.7142857143;
     
     public static final double ARM_LOWER_LIM = 4.65;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
     public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.65;
     public static final double ARM_MANUAL_INPUT_SCALAR = .0225;   //In theory .02 - .025 should be the optimal range for the new 550
-    //was .015
+    
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
     public static double ARM_STOW_UP     = ARM_LOWER_LIM+.37;

@@ -75,4 +75,10 @@ public class EagleMath {
         double sign = (value < 0) ? -1 : 1;
         return sign * (Math.abs(x) % Math.abs(value));
     }
+    
+    public static double cap(double in, double low, double high) {
+        if(in < low)  in = low;
+        if(in > high) in = high;
+        return in;
+    }
 }

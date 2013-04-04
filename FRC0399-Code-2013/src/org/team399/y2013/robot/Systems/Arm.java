@@ -5,6 +5,7 @@
 package org.team399.y2013.robot.Systems;
 
 import edu.wpi.first.wpilibj.CANJaguar;
+import edu.wpi.first.wpilibj.DigitalInput;
 import org.team399.y2013.robot.Constants;
 
 /**
@@ -20,6 +21,7 @@ public class Arm {
     private boolean enabled = false;
     private int ARM_ID = Constants.ARM_ID;
     private static Arm instance = null;
+    private DigitalInput zeroSwitch;
     
 
     public static Arm getInstance() {
@@ -31,6 +33,9 @@ public class Arm {
 
     private Arm() {
         int initCounter = 0;
+        
+        zeroSwitch = new DigitalInput(Constants.ZERO_SWITCH_SENSOR);
+        
         while (initCounter <= 10 && arm == null) {
             arm = initializeArmJaguar(arm, ARM_ID);
             System.out.println("Arm initialized!");
@@ -66,10 +71,18 @@ public class Arm {
      */
     public double fromDegrees(double angle) {
         angle /= Constants.DEGREES_PER_TURN;
-        angle = Constants.ARM_UPPER_LIM - angle;
+        angle = Constants.ARM_STOW_UP+angle;
         return angle;
     }
-
+    
+    public double toDegrees(double turns) {
+        double answer;
+        answer = turns;
+        answer -= Constants.ARM_STOW_UP;
+        answer *= Constants.DEGREES_PER_TURN;
+        return answer;
+    }
+    
     /**
      * Sets the arm setpoint in terms of pot rotations
      * @param setpoint setpoint in rotations
@@ -83,6 +96,9 @@ public class Arm {
         this.setpoint = setpoint;
         try {
     //        arm.changeControlMode(CANJaguar.ControlMode.kPosition);
+            if(arm.getX() <= 1.0 || arm.getX() >= 9.0) {
+                System.out.println("arm pot fault. consider switching to open loop");
+            }
             arm.setX(this.setpoint);
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in setpoint change");
@@ -163,8 +179,8 @@ public class Arm {
                 armJag = new CANJaguar(CAN_ID, CANJaguar.ControlMode.kPosition);
             }
 
-//            if (armJag.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
-  //          {
+            if (armJag.getPowerCycled()) // Should be true on first call; like if the bot was just turned on, or a brownout.
+            {
                 // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
                 armJag.changeControlMode(CANJaguar.ControlMode.kPosition);
                 //armJag.enableControl();
@@ -179,7 +195,7 @@ public class Arm {
                 armJag.setVoltageRampRate(0.0);	//Might want to play with this during testing
                 armJag.configFaultTime(0.5); //0.5 second is min time.
                 armJag.enableControl();
-    //        }
+            }
         } catch (Throwable e) {
             armJag = null; // If a jaguar fails to be initialized, then set it to null, and try initializing at a later time
             System.err.println("ARM Init CAN ERROR. ID: " + CAN_ID);
