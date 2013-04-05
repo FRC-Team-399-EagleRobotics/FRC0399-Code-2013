@@ -4,10 +4,10 @@
  */
 package org.team399.y2013.robot.Systems.Automation;
 
-import org.team399.y2013.Utilities.EagleMath;
+import org.team399.y2013.Utilities.PulseTriggerBoolean;
+import org.team399.y2013.robot.Constants;
 import org.team399.y2013.robot.Systems.Arm;
-import org.team399.y2013.robot.Systems.Intake;
-import org.team399.y2013.robot.Systems.Shooter;
+import org.team399.y2013.robot.Systems.Imaging.EagleEye;
 
 /**
  *
@@ -15,33 +15,40 @@ import org.team399.y2013.robot.Systems.Shooter;
  */
 public class AutoArmController {
     private Arm arm;
-    private Intake intake;
-    private Shooter shooter;
+    private EagleEye eye;
     
-    private double intakeSet = 0.0;
     private double armSet = 0.0;
+    private boolean wantLock = false;
     
-    public AutoArmController(Arm arm, Intake intake, Shooter shooter) {
+    private PulseTriggerBoolean lockTriggerWatcher = new PulseTriggerBoolean();
+    
+    public AutoArmController(Arm arm, EagleEye eye) {
         this.arm = arm;
-        this.intake = intake;
-        this.shooter = shooter;
+        this.eye = eye;
+    }
+    
+    public void requestLock(boolean state) {
+        wantLock = state;
+    }
+    
+    public void start() {
+        eye.start();
+    }
+    
+    public double getArmSet() {
+        return armSet;
     }
     
     public void run() {
-//        if(intake.isDiscPresent() && !EagleMath.isInBand(arm.getActual(), 
-//                                     Arm.ArmSetpoints.INTAKE_LOAD - .05, 
-//                                     Arm.ArmSetpoints.INTAKE_LOAD + .05)) { 
-//            intakeSet = 0.0;
-//        } else {
-//            
-//        }
-//        
-//        intake.set(intakeSet);
+        lockTriggerWatcher.set(wantLock);
+        boolean isLock = lockTriggerWatcher.get();
+        eye.requestNewImage(isLock);
+        
+        if(isLock) {
+            armSet = (eye.getHighestTarget().y-Constants.AUTO_AIM_ARM_Y_OFFSET) * Constants.AUTO_AIM_ARM_PXL_TO_ANGLE;
+        } else {
+            armSet = 0;
+        }
     }
-     
-    public void setIntake(double in) {
-        this.intakeSet = in;
-    }
-    
     
 }

@@ -103,5 +103,6 @@ public class Constants {
     
     public static long AUTO_SHOOT_MIN_PERIOD = 375;
     
+    public static double AUTO_AIM_ARM_PXL_TO_ANGLE = 0.0;   //Scalar to convert from pixels to arm angle
     //todo: organize these
 }

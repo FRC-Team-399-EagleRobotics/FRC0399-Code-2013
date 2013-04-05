@@ -60,8 +60,8 @@ public class EagleEye extends Thread {
     public void run() {
         init();
         while (m_run) {
+            m_ps.println("Processing image from camera");
             if (cam.freshImage() && wantRefresh) {
-                //m_ps.println("Image Processing started...");
                 long procStartTime = System.currentTimeMillis();
                 targets = ImageProcessor.processImage(cam.getImage(), thresholds[0]);    //Process image from camera using given thresholds
 
