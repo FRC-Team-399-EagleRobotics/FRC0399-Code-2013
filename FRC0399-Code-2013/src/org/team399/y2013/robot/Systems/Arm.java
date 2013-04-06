@@ -136,6 +136,10 @@ public class Arm {
         
         return answer;
     }
+    
+    public boolean getZeroSwitch() {
+        return zeroSwitch.get();
+    }
 
     public void setPIDConstants(double P, double I, double D) {
         ARM_P = P;
