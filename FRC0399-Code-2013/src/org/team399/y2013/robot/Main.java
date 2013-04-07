@@ -276,7 +276,5 @@ public class Main extends IterativeRobot {
         SmartDashboard.putNumber("Right Drive Output", drive.rightOutput);
         
         SmartDashboard.putBoolean("Climber upper limit", climber.getSwitch());
-        
-        SmartDashboard.putBoolean("Arm Reed Switch State", arm.getZeroSwitch());
     }
 }
