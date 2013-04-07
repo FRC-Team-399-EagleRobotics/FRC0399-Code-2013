@@ -41,8 +41,8 @@ public class Constants {
     //Climber Constants:
     public static final int WINCH_PORT = 5;
     public static final int LIMIT_SWITCH_PORT = 5;
-    public static final double CLIMBER_UP_SPEED = 1.0;
-    public static final double CLIMBER_DOWN_SPEED = -1.0;
+    public static final double CLIMBER_UP_SPEED = -1.0; //Comp Bot == 1.0;
+    public static final double CLIMBER_DOWN_SPEED = 1.0;
     
     //Feeder constants:
     public static final int FEEDER_MOTOR = 6;//pre spring hook port 7;
@@ -85,9 +85,9 @@ public class Constants {
     public static final int ZERO_SWITCH_SENSOR = 14;
     public static final double DEGREES_PER_TURN = 61.7142857143;
     
-    public static final double ARM_LOWER_LIM = 4.65;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
+    public static double ARM_LOWER_LIM = 4.65;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
     public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.65;
-    public static final double ARM_MANUAL_INPUT_SCALAR = .0225;   //In theory .02 - .025 should be the optimal range for the new 550
+    public static final double ARM_MANUAL_INPUT_SCALAR = .016; //.0225;   //In theory .02 - .025 should be the optimal range for the new 550
     
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints

@@ -45,7 +45,7 @@ public class AutoArmController {
         eye.requestNewImage(isLock);
         
         if(isLock) {
-            armSet = (eye.getHighestTarget().y-Constants.AUTO_AIM_ARM_Y_OFFSET) * Constants.AUTO_AIM_ARM_PXL_TO_ANGLE;
+           // armSet = (eye.getHighestTarget().y-Constants.AUTO_AIM_ARM_Y_OFFSET) * Constants.AUTO_AIM_ARM_PXL_TO_ANGLE;
         } else {
             armSet = 0;
         }

@@ -20,6 +20,7 @@ import org.team399.y2013.robot.Autonomous.Shoot3AutonHigh;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonMid;
 import org.team399.y2013.robot.Systems.Automation.AutoShootController;
 import org.team399.y2013.robot.Systems.Climber;
+import org.team399.y2013.robot.Systems.Imaging.EagleEye;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -49,7 +50,9 @@ public class Main extends IterativeRobot {
     public static Climber climber = new Climber(Constants.WINCH_PORT, Constants.LIMIT_SWITCH_PORT);
     public static Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
             Constants.COMPRESSOR_RELAY);
+    public static EagleEye eye = new EagleEye();
     public static AutoShootController autoshoot = new AutoShootController(shooter, feeder);
+    
 
     /**
      * This function is run when the robot is first started up and should be
@@ -60,6 +63,8 @@ public class Main extends IterativeRobot {
         arm = Arm.getInstance();
         comp.start();
         arm.setEnabled(true);
+        eye.start();
+        eye.requestNewImage(false);
     }
     
     public void disabledInit() {
@@ -80,6 +85,7 @@ public class Main extends IterativeRobot {
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
+        arm.autoZero();
         if (auton == 0) {
             Shoot3AutonHigh.run();
         } else if (auton == 1) {
@@ -90,6 +96,7 @@ public class Main extends IterativeRobot {
     int auton = 0;
 
     public void disabledPeriodic() {
+        arm.autoZero();
         System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();                               //Update diagnostic dashboard
@@ -113,7 +120,7 @@ public class Main extends IterativeRobot {
         arm.setBrake(true);
     }
 
-    
+    PulseTriggerBoolean cameraButton = new PulseTriggerBoolean();
     /**
      * This function is called periodically during operator control
      */
@@ -159,6 +166,8 @@ public class Main extends IterativeRobot {
                     (drive.twoStickToTurning(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)), 
                      drive.twoStickToThrottle(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)));
         }
+        
+        arm.autoZero();
         
         operator();
     }
@@ -224,7 +233,7 @@ public class Main extends IterativeRobot {
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.ARM_STOW_UP;
         } else {
-            double fineAdjust = (Constants.ARM_MANUAL_INPUT_SCALAR);
+            double fineAdjust = 1;//(Constants.ARM_MANUAL_INPUT_SCALAR);
 //            if(Math.abs(operatorJoy.getRightY()) > .2) {
 //                fineAdjust *= operatorJoy.getRightY();
 //            } else {
@@ -242,9 +251,9 @@ public class Main extends IterativeRobot {
             }
             
             if(adjustUpButton.get()) {
-                fineAdjustInput = -.875;
+                //fineAdjustInput = -2.5*Constants.DEGREES_PER_TURN;
             } else if(adjustDnButton.get()) {
-                fineAdjustInput = .875;
+                //fineAdjustInput = 2.5*Constants.DEGREES_PER_TURN;
             } else {
                 fineAdjustInput = 0;
             }
@@ -271,10 +280,13 @@ public class Main extends IterativeRobot {
         SmartDashboard.putNumber("Arm offset", arm.getActual() - Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
         SmartDashboard.putNumber("Arm current", arm.getCurrentOutput());
         SmartDashboard.putBoolean("Arm CAN fault", arm.getCurrentOutput() == -1);
+        SmartDashboard.putNumber("Arm Actual - Deg", arm.toDegrees(arm.getActual()));
+        SmartDashboard.putNumber("Arm Set - Deg", arm.toDegrees(arm.getSetpoint()));
         
         SmartDashboard.putNumber("Left Drive Output", drive.leftOutput);
         SmartDashboard.putNumber("Right Drive Output", drive.rightOutput);
         
         SmartDashboard.putBoolean("Climber upper limit", climber.getSwitch());
+        SmartDashboard.putBoolean("Arm Zero Switch", arm.getZeroSwitch());
     }
 }

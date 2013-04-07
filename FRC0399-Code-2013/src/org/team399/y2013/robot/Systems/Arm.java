@@ -6,6 +6,7 @@ package org.team399.y2013.robot.Systems;
 
 import edu.wpi.first.wpilibj.CANJaguar;
 import edu.wpi.first.wpilibj.DigitalInput;
+import org.team399.y2013.Utilities.PulseTriggerBoolean;
 import org.team399.y2013.robot.Constants;
 
 /**
@@ -22,7 +23,6 @@ public class Arm {
     private int ARM_ID = Constants.ARM_ID;
     private static Arm instance = null;
     private DigitalInput zeroSwitch;
-    
 
     public static Arm getInstance() {
         if (instance == null) {
@@ -83,6 +83,16 @@ public class Arm {
         return answer;
     }
     
+    PulseTriggerBoolean zSwitchWatcher = new PulseTriggerBoolean();
+    
+    public void autoZero() {
+        zSwitchWatcher.set(getZeroSwitch());
+        if(zSwitchWatcher.get()) {
+            System.out.println("Arm Zero Actuated!");
+            Constants.ARM_LOWER_LIM = getActual()-1.65;
+        }
+    }
+    
     /**
      * Sets the arm setpoint in terms of pot rotations
      * @param setpoint setpoint in rotations
@@ -93,7 +103,9 @@ public class Arm {
         if(setpoint < Constants.ARM_LOWER_LIM) setpoint = Constants.ARM_LOWER_LIM;
         if(setpoint > Constants.ARM_UPPER_LIM) setpoint = Constants.ARM_UPPER_LIM;
         //this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
-        this.setpoint = setpoint;
+//        if(!getZeroSwitch()) {
+            this.setpoint = setpoint;
+//        }
         try {
     //        arm.changeControlMode(CANJaguar.ControlMode.kPosition);
             if(arm.getX() <= 1.0 || arm.getX() >= 9.0) {
@@ -122,6 +134,10 @@ public class Arm {
 
             arm = initializeArmJaguar(arm, ARM_ID);
         }
+    }
+    
+    public boolean getZeroSwitch() {
+        return !zeroSwitch.get();
     }
     
     public double getCurrentOutput() {
