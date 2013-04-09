@@ -128,6 +128,9 @@ public class Main extends IterativeRobot {
         Timer.delay(.001);
         updateDashboard();  //Update diagnostic dashboard
         
+        cameraButton.set(rightJoy.getRawButton(8));
+        eye.requestNewImage(cameraButton.get());
+        
         System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);

@@ -17,9 +17,9 @@ import java.util.Vector;
  */
 public class ImageProcessor {
 
-    public static final double areaThresh = 1000;
-    public static final double rectThresh = 50;
-    public static final double aspectThresh = 40;
+    public static final double areaThresh = 400;
+    public static final double rectThresh = 30;
+    public static final double aspectThresh = 0;
     public static final int cameraHeight = 240;
     public static final int cameraWidth = 320;
 
@@ -36,7 +36,7 @@ public class ImageProcessor {
      * returns a score from 0 to 100 rating the particle's similarity to the actual target's aspect ratio
      * @param width
      * @param height
-     * @return 
+     * @return
      */
     public static double aspectRatioScore(double width, double height) {
         //todo: change aspect ratio to Ultimate Ascent targets
@@ -97,6 +97,8 @@ public class ImageProcessor {
                     thresh.LumLow, thresh.LumHigh);                     //HSL masked binary image
             hulled = masked.convexHull(true);                           //Convex Hulledbinary image
             all = hulled.getOrderedParticleAnalysisReports(6);  //Get sorted particle report. sorted in order of size
+            hulled.write("//Img.bmp");
+            //hulled.write("//Img.jpg");
             image.free();   //Free the memory allocated to processed image.
             hulled.free();
             masked.free();
@@ -200,7 +202,7 @@ public class ImageProcessor {
             int feet = (int) distance;
             int inches = (int) ((distance - feet) * 12);
             return " X: " + x + " Y: " + y + " H: " + height + " W: "
-                    + width + " Distance: " + feet + " " + inches + " Time: " + System.currentTimeMillis();//" Area: " + area;
+                    + width + " Time: " + System.currentTimeMillis();//" Area: " + area;
         }
 
         /**

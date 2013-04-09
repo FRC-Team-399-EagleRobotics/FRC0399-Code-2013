@@ -29,7 +29,7 @@ public class EagleEye extends Thread {
         Color.fromRGB(0, 0, 1) //blue color
     };
     HSLThreshold[] thresholds = {
-        new HSLThreshold(100, 130, 60, 255, 60, 255), //Green threshold
+        new HSLThreshold(100, 130, 30, 255, 30, 255), //Green threshold
         new HSLThreshold(0, 45, 80, 255, 120, 255), //Red threshold
         new HSLThreshold(200, 240, 80, 255, 120, 255) //Blue threshold
     };
@@ -77,6 +77,13 @@ public class EagleEye extends Thread {
                     targetsFound = false;
                 }
                 
+                if(targetsFound) {
+                    System.out.println("Targets Found");
+                    for(int i = 0; i < targets.length; i++) {
+                        System.out.println("Target " + i);
+                        System.out.println(targets[i].toString());
+                    }
+                }
                 wantRefresh = false;    //This is for oneshot logic
                 
             } else {

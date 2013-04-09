@@ -89,7 +89,10 @@ public class Arm {
         zSwitchWatcher.set(getZeroSwitch());
         if(zSwitchWatcher.get()) {
             System.out.println("Arm Zero Actuated!");
+            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
             Constants.ARM_LOWER_LIM = getActual()-1.65;
+            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
+            
         }
     }
     
