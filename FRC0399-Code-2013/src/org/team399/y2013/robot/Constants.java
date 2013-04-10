@@ -86,8 +86,8 @@ public class Constants {
     public static final double DEGREES_PER_TURN = 61.7142857143;
     
     public static double ARM_LOWER_LIM = 4.65;//4.79 <-SD limit5.185 <-pre spring hook limit //is actually vertical most limit
-    public static final double ARM_UPPER_LIM = ARM_LOWER_LIM+1.65;
-    public static final double ARM_MANUAL_INPUT_SCALAR = .016; //.0225;   //In theory .02 - .025 should be the optimal range for the new 550
+    public static double ARM_UPPER_LIM = ARM_LOWER_LIM+1.65;
+    public static double ARM_MANUAL_INPUT_SCALAR = .0225;   //In theory .02 - .025 should be the optimal range for the new 550
     
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints

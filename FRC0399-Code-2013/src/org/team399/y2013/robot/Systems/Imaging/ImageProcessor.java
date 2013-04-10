@@ -97,7 +97,7 @@ public class ImageProcessor {
                     thresh.LumLow, thresh.LumHigh);                     //HSL masked binary image
             hulled = masked.convexHull(true);                           //Convex Hulledbinary image
             all = hulled.getOrderedParticleAnalysisReports(6);  //Get sorted particle report. sorted in order of size
-            hulled.write("//Img.bmp");
+            hulled.write("//img" +System.currentTimeMillis() +".bmp");
             //hulled.write("//Img.jpg");
             image.free();   //Free the memory allocated to processed image.
             hulled.free();

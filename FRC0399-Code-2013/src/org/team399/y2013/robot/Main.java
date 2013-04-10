@@ -97,7 +97,7 @@ public class Main extends IterativeRobot {
 
     public void disabledPeriodic() {
         arm.autoZero();
-        System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
+        //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();                               //Update diagnostic dashboard
         
@@ -131,7 +131,7 @@ public class Main extends IterativeRobot {
         cameraButton.set(rightJoy.getRawButton(8));
         eye.requestNewImage(cameraButton.get());
         
-        System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
+        //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
         } else if (leftJoy.getRawButton(7)) {
@@ -144,6 +144,7 @@ public class Main extends IterativeRobot {
         double rightAdjust = 0;
 //        if(leftJoy.getRawButton(4)) {
 //            leftAdjust = .25;
+        
 //            rightAdjust = -.25;
 //        }
 //        if(leftJoy.getRawButton(5)) {
