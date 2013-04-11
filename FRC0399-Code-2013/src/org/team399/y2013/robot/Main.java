@@ -143,23 +143,22 @@ public class Main extends IterativeRobot {
         
         double leftAdjust = 0;
         double rightAdjust = 0;
-//        if(leftJoy.getRawButton(4)) {
-//            leftAdjust = .25;
-        
-//            rightAdjust = -.25;
-//        }
-//        if(leftJoy.getRawButton(5)) {
-//            leftAdjust = -.25;
-//            rightAdjust = .25;
-//        }
-//        if(leftJoy.getRawButton(2)) {
-//            leftAdjust = .25;
-//            rightAdjust = .25;
-//        }
-//        if(leftJoy.getRawButton(3)) {
-//            leftAdjust = -.25;
-//            rightAdjust = -.25;
-//        }
+        if(leftJoy.getRawButton(4)) {
+            leftAdjust = .25;
+            rightAdjust = -.25;
+        }
+        if(leftJoy.getRawButton(5)) {
+            leftAdjust = -.25;
+            rightAdjust = .25;
+        }
+        if(leftJoy.getRawButton(2)) {
+            leftAdjust = .25;
+            rightAdjust = .25;
+        }
+        if(leftJoy.getRawButton(3)) {
+            leftAdjust = -.25;
+            rightAdjust = -.25;
+        }
         
         boolean shiftButton = rightJoy.getRawButton(1);
         drive.setShifter(shiftButton);
@@ -256,9 +255,9 @@ public class Main extends IterativeRobot {
             }
             
             if(adjustUpButton.get()) {
-                //fineAdjustInput = -2.5*Constants.DEGREES_PER_TURN;
+                fineAdjustInput = -2.5/Constants.DEGREES_PER_TURN;
             } else if(adjustDnButton.get()) {
-                //fineAdjustInput = 2.5*Constants.DEGREES_PER_TURN;
+                fineAdjustInput = 2.5/Constants.DEGREES_PER_TURN;
             } else {
                 fineAdjustInput = 0;
             }
