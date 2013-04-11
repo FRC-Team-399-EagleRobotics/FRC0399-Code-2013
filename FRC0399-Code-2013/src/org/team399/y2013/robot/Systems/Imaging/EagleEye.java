@@ -29,7 +29,7 @@ public class EagleEye extends Thread {
         Color.fromRGB(0, 0, 1) //blue color
     };
     HSLThreshold[] thresholds = {
-        new HSLThreshold(100, 130, 30, 255, 30, 255), //Green threshold
+        new HSLThreshold(100, 130, 0, 255, 20, 255), //Green threshold
         new HSLThreshold(0, 45, 80, 255, 120, 255), //Red threshold
         new HSLThreshold(200, 240, 80, 255, 120, 255) //Blue threshold
     };

@@ -69,6 +69,7 @@ public class Main extends IterativeRobot {
     
     public void disabledInit() {
         arm.setBrake(true);
+        System.out.println("Robot is done initializing");
     }
 
     public void autonomousInit() {

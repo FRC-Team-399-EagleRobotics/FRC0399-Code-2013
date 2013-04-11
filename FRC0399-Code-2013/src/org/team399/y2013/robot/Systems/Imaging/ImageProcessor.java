@@ -17,8 +17,8 @@ import java.util.Vector;
  */
 public class ImageProcessor {
 
-    public static final double areaThresh = 400;
-    public static final double rectThresh = 30;
+    public static final double areaThresh = 100;
+    public static final double rectThresh = 0;
     public static final double aspectThresh = 0;
     public static final int cameraHeight = 240;
     public static final int cameraWidth = 320;
@@ -86,6 +86,7 @@ public class ImageProcessor {
             return null;   //If the image is null, return a null target
         }
         BinaryImage masked;
+        BinaryImage filtered;
         BinaryImage hulled;
         Vector rects = new Vector();
         rects.ensureCapacity(4);
@@ -95,12 +96,16 @@ public class ImageProcessor {
             masked = image.thresholdHSL(thresh.HueLow, thresh.HueHigh,
                     thresh.SatLow, thresh.SatHigh,
                     thresh.LumLow, thresh.LumHigh);                     //HSL masked binary image
-            hulled = masked.convexHull(true);                           //Convex Hulledbinary image
+            filtered = masked.removeSmallObjects(true, 1);
+            hulled = filtered.convexHull(true);                           //Convex Hulledbinary image
+            
             all = hulled.getOrderedParticleAnalysisReports(6);  //Get sorted particle report. sorted in order of size
+            
             hulled.write("//img" +System.currentTimeMillis() +".bmp");
             //hulled.write("//Img.jpg");
             image.free();   //Free the memory allocated to processed image.
             hulled.free();
+            filtered.free();
             masked.free();
         } catch (NIVisionException e) {
             System.out.println("[IMG-PROC] NI Vision exception, processor ended");
@@ -118,11 +123,11 @@ public class ImageProcessor {
                         aspectRatioScore(all[i].boundingRectWidth,
                         all[i].boundingRectHeight, 4.5);            //4.5 is the aspect ratio for the high target
 
-                if (rectangularityScore > rectThresh
-                        && aspectRatioScore > aspectThresh) {
+                //if (rectangularityScore > rectThresh
+                //        && aspectRatioScore > aspectThresh) {
                     Target current = new Target(all[i]);
                     rects.addElement(current);          //Target found, return it 
-                }
+                //}
             }
 
         }
