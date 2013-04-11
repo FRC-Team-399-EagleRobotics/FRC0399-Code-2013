@@ -72,18 +72,16 @@ public class DriveTrain {
         double wheelNonLinearity;
         boolean quickTurn = Math.abs(throttle) < .05;//Math.abs(wheel) > .375 &&
         
-
         double neg_inertia = wheel - old_wheel;
         old_wheel = wheel;
 
         if (gear == Constants.HIGH_GEAR) {
-            wheelNonLinearity = 0.9; // used to be csvReader->TURN_NONL
+            wheelNonLinearity = 1.0;        //Used to be .9 higher is less sensitive
             // Apply a sin function that's scaled to make it feel bette
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
         } else {
-            wheelNonLinearity = 0.8; // used to be csvReader->TURN_NONL higher is less sensitive
-            // Apply a sin function that's scaled to make it feel bette
+            wheelNonLinearity = 0.8;
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
@@ -91,21 +89,21 @@ public class DriveTrain {
 
         double neg_inertia_scalar;
         if (gear == Constants.HIGH_GEAR) {
-            neg_inertia_scalar = 3; // used to be csvReader->NEG_INT 11
-            sensitivity = 1.15; // used to be csvReader->SENSE_HIGH
+            neg_inertia_scalar = 3;
+            sensitivity = 1.15;
         } else {
             if (wheel * neg_inertia > 0) {
-                neg_inertia_scalar = 5; // used to be csvReader->NE 5
+                neg_inertia_scalar = 5;
             } else {
                 if (Math.abs(wheel) > 0.65) {
-                    neg_inertia_scalar = 10;// used to be csvRe 10
+                    neg_inertia_scalar = 10;
                 } else {
-                    neg_inertia_scalar = 3; // used to be csvRe 3
+                    neg_inertia_scalar = 3;
                 }
             }
-            sensitivity = 1.11; // used to be csvReader->SENSE_LOW lower is less sensitive
+            sensitivity = 1.11; //lower is less sensitive
 
-            if (Math.abs(throttle) > 0.1) { // used to be csvReader->SENSE_
+            if (Math.abs(throttle) > 0.1) {
                 sensitivity = .9 - (.9 - sensitivity) / Math.abs(throttle);
             }
         }
@@ -139,6 +137,10 @@ public class DriveTrain {
             angular_power = Math.abs(throttle) * wheel * sensitivity;
         }
 
+        if(quickTurn) {
+            angular_power = EagleMath.signedSquare(angular_power, 1);   //make turning less sensitive under quickturn
+        }
+        
         right_pwm = left_pwm = linear_power;
         left_pwm += angular_power;
         right_pwm -= angular_power;

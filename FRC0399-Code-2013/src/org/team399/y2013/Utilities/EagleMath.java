@@ -36,6 +36,13 @@ public class EagleMath {
         return input > low && input < high;
     }
     
+    
+    /**
+     * Creates a deadband.
+     * @param in
+     * @param width
+     * @return 
+     */
     public static double deadband(double in, double width) {
         if(Math.abs(in) < width) {
             in = 0;
@@ -64,6 +71,12 @@ public class EagleMath {
         }
     }
     
+    /**
+     * Truncates an input(value) to specified decimal places
+     * @param value
+     * @param places
+     * @return 
+     */
     public static double truncate(double value, double places) {
         double multiplier = MathUtils.pow(10, places);
         return Math.floor(multiplier*value) / multiplier;
@@ -80,5 +93,16 @@ public class EagleMath {
         if(in < low)  in = low;
         if(in > high) in = high;
         return in;
+    }
+    
+    /**
+     * Returns a curve similar to the square curve, but the negative range is inverted
+     * K is a scaling constant. default to 1 if no scaling needed
+     * @param in
+     * @param k
+     * @return 
+     */
+    public static double signedSquare(double in, double k) {
+        return in*Math.abs(in)*k;
     }
 }
