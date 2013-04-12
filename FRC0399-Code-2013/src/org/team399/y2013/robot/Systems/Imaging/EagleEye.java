@@ -133,6 +133,7 @@ public class EagleEye extends Thread {
      */
     public Target[] getTargets() {
         return targets;
+        
     }
 
     /**

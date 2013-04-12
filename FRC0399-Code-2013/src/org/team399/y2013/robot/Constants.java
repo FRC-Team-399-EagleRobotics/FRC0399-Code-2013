@@ -94,7 +94,7 @@ public class Constants {
     public static double ARM_STOW_UP     = ARM_LOWER_LIM+.37;
     public static double ARM_INTAKE_LOAD = ARM_STOW_UP;
     public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.66;
-    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.342;
+    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.28;
     public static double ARM_MID_SHOT    = ARM_LOWER_LIM + 1.42;
     public static double ARM_STOW_DOWN   = ARM_HUMAN_LOAD;
     public static double ARM_LOW_SHOT    = ARM_STOW_DOWN-0.5;
@@ -103,6 +103,6 @@ public class Constants {
     
     public static long AUTO_SHOOT_MIN_PERIOD = 375;
     
-    public static double AUTO_AIM_ARM_PXL_TO_ANGLE = 0.0;   //Scalar to convert from pixels to arm angle
+    public static double AUTO_AIM_ARM_PXL_TO_ANGLE = 0.002;   //Scalar to convert from pixels to arm angle
     //todo: organize these
 }

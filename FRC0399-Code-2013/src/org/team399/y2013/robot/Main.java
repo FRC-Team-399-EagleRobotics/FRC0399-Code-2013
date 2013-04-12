@@ -122,6 +122,7 @@ public class Main extends IterativeRobot {
     }
 
     PulseTriggerBoolean cameraButton = new PulseTriggerBoolean();
+    boolean camButtonOut = false;
     /**
      * This function is called periodically during operator control
      */
@@ -130,7 +131,8 @@ public class Main extends IterativeRobot {
         updateDashboard();  //Update diagnostic dashboard
         
         cameraButton.set(rightJoy.getRawButton(8));
-        eye.requestNewImage(cameraButton.get());
+        camButtonOut = cameraButton.get();
+        eye.requestNewImage(camButtonOut);
         
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
@@ -143,6 +145,7 @@ public class Main extends IterativeRobot {
         
         double leftAdjust = 0;
         double rightAdjust = 0;
+        
         if(leftJoy.getRawButton(4)) {
             leftAdjust = .25;
             rightAdjust = -.25;
@@ -158,6 +161,11 @@ public class Main extends IterativeRobot {
         if(leftJoy.getRawButton(3)) {
             leftAdjust = -.25;
             rightAdjust = -.25;
+        }
+        
+        if(drive.gear == Constants.LOW_GEAR) {
+            leftAdjust *= .75;
+            rightAdjust*= .75;
         }
         
         boolean shiftButton = rightJoy.getRawButton(1);
@@ -236,6 +244,12 @@ public class Main extends IterativeRobot {
             armSet = Constants.ARM_MID_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.ARM_STOW_UP;
+        } else if (camButtonOut && eye.getTargets()!=null){
+            System.out.println("AutoAim");
+            double visionOut = (40-(240-eye.getTargets()[0].y))*Constants.AUTO_AIM_ARM_PXL_TO_ANGLE;
+            System.out.println("Autoaim output = " + visionOut);
+            visionOut = EagleMath.cap(visionOut, -15/Constants.DEGREES_PER_TURN, 15/Constants.DEGREES_PER_TURN);
+           armSet += visionOut;
         } else {
             double fineAdjust = 1;//(Constants.ARM_MANUAL_INPUT_SCALAR);
 //            if(Math.abs(operatorJoy.getRightY()) > .2) {
@@ -292,5 +306,11 @@ public class Main extends IterativeRobot {
         
         SmartDashboard.putBoolean("Climber upper limit", climber.getSwitch());
         SmartDashboard.putBoolean("Arm Zero Switch", arm.getZeroSwitch());
+       
+        if(eye.getTargets() != null) {
+            SmartDashboard.putNumber("LargestTarget Size", eye.getTargets()[0].area);
+            SmartDashboard.putNumber("LargestTarget X", eye.getTargets()[0].x);
+            SmartDashboard.putNumber("LargestTarget Y", eye.getTargets()[0].y);
+        }
     }
 }

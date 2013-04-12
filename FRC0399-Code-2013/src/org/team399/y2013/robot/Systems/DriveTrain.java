@@ -21,7 +21,7 @@ public class DriveTrain {
     private Gyro pitch = null;// new Gyro(3);
     private Solenoid shifter = new Solenoid(Constants.SHIFTER_PORT);
     private final double WHEEL_DIA = Constants.WHEEL_DIAMETER;
-    boolean gear = true;
+    public boolean gear = true;
     
     public double leftOutput = 0;
     public double rightOutput = 0;
