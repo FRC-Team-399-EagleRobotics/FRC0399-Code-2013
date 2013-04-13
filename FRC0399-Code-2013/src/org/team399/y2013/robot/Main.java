@@ -7,6 +7,7 @@
 package org.team399.y2013.robot;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import org.team399.y2013.Utilities.EagleMath;
 import org.team399.y2013.robot.Systems.Arm;
 import org.team399.y2013.robot.Systems.DriveTrain;
@@ -21,6 +22,7 @@ import org.team399.y2013.robot.Autonomous.Shoot3AutonMid;
 import org.team399.y2013.robot.Systems.Automation.AutoShootController;
 import org.team399.y2013.robot.Systems.Climber;
 import org.team399.y2013.robot.Systems.Imaging.EagleEye;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -52,6 +54,7 @@ public class Main extends IterativeRobot {
             Constants.COMPRESSOR_RELAY);
     public static EagleEye eye = new EagleEye();
     public static AutoShootController autoshoot = new AutoShootController(shooter, feeder);
+    SendableChooser autonChooser = new SendableChooser();
     
 
     /**
@@ -70,6 +73,9 @@ public class Main extends IterativeRobot {
     public void disabledInit() {
         arm.setBrake(true);
         System.out.println("Robot is done initializing");
+        autonChooser.addDefault("HIGH", new Integer(0));
+        autonChooser.addObject("MID", new Integer(1));
+        autonChooser.addObject("STATIC", new Integer(2));
     }
 
     public void autonomousInit() {
@@ -106,8 +112,11 @@ public class Main extends IterativeRobot {
             auton = 0;
         } else if (rightJoy.getRawButton(1)) {
             auton = 1;
+        } else {
+            auton = ((Integer)autonChooser.getSelected()).intValue();
         }
-
+        
+        
         if (auton == 0) {                               //Displays selected auton
             SmartDashboard.putString("Auton", "HIGH");
         } else if (auton == 1) {
