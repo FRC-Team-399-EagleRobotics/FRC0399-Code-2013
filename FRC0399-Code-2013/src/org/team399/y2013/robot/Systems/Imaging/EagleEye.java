@@ -93,8 +93,6 @@ public class EagleEye extends Thread {
             try {
                 Thread.sleep(10);
             } catch (Exception e) { }
-
-
         }
     }
 

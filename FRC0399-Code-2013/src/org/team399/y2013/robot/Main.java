@@ -52,7 +52,7 @@ public class Main extends IterativeRobot {
     public static Climber climber = new Climber(Constants.WINCH_PORT, Constants.LIMIT_SWITCH_PORT);
     public static Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
             Constants.COMPRESSOR_RELAY);
-    public static EagleEye eye = new EagleEye();
+    //public static EagleEye eye = new EagleEye();
     public static AutoShootController autoshoot = new AutoShootController(shooter, feeder);
     SendableChooser autonChooser = new SendableChooser();
     
@@ -66,13 +66,13 @@ public class Main extends IterativeRobot {
         arm = Arm.getInstance();
         comp.start();
         arm.setEnabled(true);
-        eye.start();
-        eye.requestNewImage(false);
+        System.out.println("Robot is done initializing");
+//        eye.start();
+//        eye.requestNewImage(false);
     }
     
     public void disabledInit() {
         arm.setBrake(true);
-        System.out.println("Robot is done initializing");
         autonChooser.addDefault("HIGH", new Integer(0));
         autonChooser.addObject("MID", new Integer(1));
         autonChooser.addObject("STATIC", new Integer(2));
@@ -104,7 +104,7 @@ public class Main extends IterativeRobot {
 
     public void disabledPeriodic() {
         arm.autoZero();
-        //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
+        
         arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();                               //Update diagnostic dashboard
         
@@ -141,12 +141,14 @@ public class Main extends IterativeRobot {
         
         cameraButton.set(rightJoy.getRawButton(8));
         camButtonOut = cameraButton.get();
-        eye.requestNewImage(camButtonOut);
         
+<<<<<<< HEAD
         
         
         
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
+=======
+>>>>>>> DasiyCV and vision stuff
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
         } else if (leftJoy.getRawButton(7)) {
@@ -222,7 +224,7 @@ public class Main extends IterativeRobot {
     PulseTriggerBoolean adjustDnButton = new PulseTriggerBoolean();
     public void operator() {
 
-        double manScalar = SmartDashboard.getNumber("ARM_MAN_SCAL", Constants.ARM_MANUAL_INPUT_SCALAR);
+        double manScalar = Constants.ARM_MANUAL_INPUT_SCALAR;
 
         if (operatorJoy.getButton(5)) {
             feeder.setRoller(1.0);
@@ -234,8 +236,6 @@ public class Main extends IterativeRobot {
         boolean wantShoot = operatorJoy.getButton(6);
         
         if (wantShoot) {
-            //comment out feeder kicker lines for autoshoot
-            
             feeder.setKicker(Constants.KICKER_OUT);
         } else {
             feeder.setKicker(Constants.KICKER_IN);
@@ -279,12 +279,6 @@ public class Main extends IterativeRobot {
             armSet = Constants.ARM_MID_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP)) {
             armSet = Constants.ARM_STOW_UP;
-        } else if (camButtonOut && eye.getTargets()!=null){
-            System.out.println("AutoAim");
-            double visionOut = (40-(240-eye.getTargets()[0].y))*Constants.AUTO_AIM_ARM_PXL_TO_ANGLE;
-            System.out.println("Autoaim output = " + visionOut);
-            visionOut = EagleMath.cap(visionOut, -15/Constants.DEGREES_PER_TURN, 15/Constants.DEGREES_PER_TURN);
-           armSet += visionOut;
         } else {
             double fineAdjust = 1;//(Constants.ARM_MANUAL_INPUT_SCALAR);
 //            if(Math.abs(operatorJoy.getRightY()) > .2) {
@@ -306,9 +300,9 @@ public class Main extends IterativeRobot {
             if(adjustUpButton.get()) {
                 fineAdjustInput = -2.5/Constants.DEGREES_PER_TURN;
             } else if(adjustDnButton.get()) {
-                fineAdjustInput = 2.5/Constants.DEGREES_PER_TURN;
+                fineAdjustInput =  2.5/Constants.DEGREES_PER_TURN;
             } else {
-                fineAdjustInput = 0;
+                fineAdjustInput =  0;
             }
             
             if(leftJoy.getRawButton(9)) {
@@ -347,11 +341,5 @@ public class Main extends IterativeRobot {
         
         SmartDashboard.putBoolean("Climber upper limit", climber.getSwitch());
         SmartDashboard.putBoolean("Arm Zero Switch", arm.getZeroSwitch());
-       
-        if(eye.getTargets() != null) {
-            SmartDashboard.putNumber("LargestTarget Size", eye.getTargets()[0].area);
-            SmartDashboard.putNumber("LargestTarget X", eye.getTargets()[0].x);
-            SmartDashboard.putNumber("LargestTarget Y", eye.getTargets()[0].y);
-        }
     }
 }
