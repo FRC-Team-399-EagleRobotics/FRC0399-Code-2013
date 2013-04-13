@@ -113,7 +113,7 @@ public class Main extends IterativeRobot {
         } else if (rightJoy.getRawButton(1)) {
             auton = 1;
         } else {
-            auton = ((Integer)autonChooser.getSelected()).intValue();
+            //auton = ((Integer)autonChooser.getSelected()).intValue();
         }
         
         
@@ -143,6 +143,9 @@ public class Main extends IterativeRobot {
         camButtonOut = cameraButton.get();
         eye.requestNewImage(camButtonOut);
         
+        
+        
+        
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
@@ -151,6 +154,8 @@ public class Main extends IterativeRobot {
         } else {
             climber.set(0);
         }
+        
+        
         
         double leftAdjust = 0;
         double rightAdjust = 0;
@@ -177,6 +182,13 @@ public class Main extends IterativeRobot {
             rightAdjust*= .75;
         }
         
+        if(leftJoy.getRawButton(8)) {
+            double aim = autoYaw();
+            leftAdjust = -aim;
+            rightAdjust = aim;
+        }
+        
+        
         boolean shiftButton = rightJoy.getRawButton(1);
         drive.setShifter(shiftButton);
         
@@ -192,6 +204,19 @@ public class Main extends IterativeRobot {
         
         operator();
     }
+    
+    double autoYaw() {
+        double x = SmartDashboard.getNumber("TargetX", 0.0);
+        
+        return x;
+    }
+    
+    double autoPitch() {
+        double y = SmartDashboard.getNumber("TargetY", 0.0);
+        y*=.5;
+        return y;
+    }
+    
     double armSet = Constants.ARM_STOW_UP;
     PulseTriggerBoolean adjustUpButton = new PulseTriggerBoolean();
     PulseTriggerBoolean adjustDnButton = new PulseTriggerBoolean();
@@ -222,14 +247,15 @@ public class Main extends IterativeRobot {
         
         if (operatorJoy.getButton(1)) {
             isShooting = true;
-            shooterSet = 6000.0;
+            shooterSet = 2000.0;
         } else if (operatorJoy.getButton(2)) {
             isShooting = true;
-            shooterSet = Constants.SHOOTER_SHOT;
+            shooterSet = 4000.0;
         } else if (operatorJoy.getButton(3)) {
             isShooting = true;
             shooterSet = Constants.SHOOTER_SHOT;
-        } else {
+        }
+        else {
             isShooting = false;
             shooterSet = Constants.SHOOTER_STOP;
         }
@@ -284,6 +310,10 @@ public class Main extends IterativeRobot {
             } else {
                 fineAdjustInput = 0;
             }
+            
+            if(leftJoy.getRawButton(9)) {
+                fineAdjustInput = -autoPitch();
+            }
             fineAdjust *= EagleMath.deadband(fineAdjustInput, .05);
             
             armSet = arm.getSetpoint() + coarseAdjust + fineAdjust;
@@ -293,6 +323,8 @@ public class Main extends IterativeRobot {
         shooter.setShooterSpeed(shooterSet);
         arm.setPointRotations(armSet);
     }
+    
+    
 
     public void updateDashboard() {
         SmartDashboard.putNumber("Shooter Actual Velocity", shooter.getVelocity());     //shooter current vel

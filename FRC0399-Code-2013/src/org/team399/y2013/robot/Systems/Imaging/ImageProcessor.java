@@ -101,7 +101,8 @@ public class ImageProcessor {
             
             all = hulled.getOrderedParticleAnalysisReports(6);  //Get sorted particle report. sorted in order of size
             
-            hulled.write("//img" +System.currentTimeMillis() +".bmp");
+            image.write("//img" +System.currentTimeMillis() +".bmp");
+            
             //hulled.write("//Img.jpg");
             image.free();   //Free the memory allocated to processed image.
             hulled.free();
