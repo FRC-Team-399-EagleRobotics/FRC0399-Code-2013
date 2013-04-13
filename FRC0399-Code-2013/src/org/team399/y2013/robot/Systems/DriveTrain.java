@@ -139,6 +139,9 @@ public class DriveTrain {
 
         if(quickTurn) {
             angular_power = EagleMath.signedSquare(angular_power, .75);   //make turning less sensitive under quickturn
+            if(Math.abs(angular_power) >= .745) {
+                angular_power = 1.0*EagleMath.signum(angular_power);
+            }
         }
         
         right_pwm = left_pwm = linear_power;

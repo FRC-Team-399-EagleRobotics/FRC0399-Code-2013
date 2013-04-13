@@ -142,13 +142,9 @@ public class Main extends IterativeRobot {
         cameraButton.set(rightJoy.getRawButton(8));
         camButtonOut = cameraButton.get();
         
-<<<<<<< HEAD
-        
         
         
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
-=======
->>>>>>> DasiyCV and vision stuff
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
         } else if (leftJoy.getRawButton(7)) {
@@ -209,7 +205,10 @@ public class Main extends IterativeRobot {
     
     double autoYaw() {
         double x = SmartDashboard.getNumber("TargetX", 0.0);
-        
+        x = EagleMath.cap(x, -.3, 3);
+        if(Math.abs(x) < .1) {
+            x *= 5;
+        }
         return x;
     }
     
