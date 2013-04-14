@@ -246,10 +246,13 @@ public class Main extends IterativeRobot {
         
         if (operatorJoy.getButton(1)) {
             isShooting = true;
-            shooterSet = 2000.0;
+            //shooter.setMotors(-1);
+            shooterSet = 18000.0;
         } else if (operatorJoy.getButton(2)) {
             isShooting = true;
-            shooterSet = 4000.0;
+            //shooter.setIsClosedLoop(false);
+            //shooter.setMotors(-1);
+            shooterSet = 25000.0;
         } else if (operatorJoy.getButton(3)) {
             isShooting = true;
             shooterSet = Constants.SHOOTER_SHOT;
