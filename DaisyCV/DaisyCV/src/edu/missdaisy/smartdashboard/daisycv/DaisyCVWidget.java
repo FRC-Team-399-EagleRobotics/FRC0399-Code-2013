@@ -18,6 +18,7 @@ import edu.wpi.first.wpijavacv.WPIPolygon;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 
@@ -83,6 +84,29 @@ public class DaisyCVWidget extends WPICameraExtension {
 
     @Override
     public WPIImage processImage(WPIColorImage rawImage) {
+        
+        double yaw = 0.0;   //Yaw for azimuth calculations
+        double pitch = 0.0; //Pitch for altitude calculations
+        if( !m_debugMode )
+        {
+            try
+            {
+                yaw = Robot.getTable().getNumber("pitch");
+            }
+            catch( NoSuchElementException e)
+            { }
+            catch( IllegalArgumentException e )
+            { }
+            
+            try
+            {
+                pitch = Robot.getTable().getNumber("pitch");
+            }
+            catch( NoSuchElementException e)
+            { }
+            catch( IllegalArgumentException e )
+            { }
+        }
 
         if (size == null || size.width() != rawImage.getWidth() || size.height() != rawImage.getHeight()) {
             size = opencv_core.cvSize(rawImage.getWidth(), rawImage.getHeight());
@@ -196,6 +220,8 @@ public class DaisyCVWidget extends WPICameraExtension {
             y = -((2 * (y / size.height())) - 1);
 
             double range = (kTopTargetHeightIn - kCameraHeightIn) / Math.tan((y * kVerticalFOVDeg / 2.0 + kCameraPitchDeg) * Math.PI / 180.0);
+            double azimuth = this.boundAngle0to360Degrees(x*kHorizontalFOVDeg/2.0 + yaw - kShooterOffsetDeg);
+            double altitude = this.boundAngle0to360Degrees(y*kVerticalFOVDeg/2.0 + pitch);
 
             if (!m_debugMode) {
                 //Robot.getTable().beginTransaction();
@@ -204,6 +230,8 @@ public class DaisyCVWidget extends WPICameraExtension {
                 Robot.getTable().putNumber("TargetY", y);
                 Robot.getTable().putNumber("TargetRange", range);
                 Robot.getTable().putNumber("TargetArea", square.getArea());
+                Robot.getTable().putNumber("azimuth", azimuth);
+                Robot.getTable().putNumber("altitude", altitude);
                 //Robot.getTable().endTransaction();
             } else {
                 System.out.println("DebugMode, target found");
@@ -240,6 +268,20 @@ public class DaisyCVWidget extends WPICameraExtension {
         //System.gc();
 
         return rawImage;
+    }
+    
+    private double boundAngle0to360Degrees(double angle)
+    {
+        // Naive algorithm
+        while(angle >= 360.0)
+        {
+            angle -= 360.0;
+        }
+        while(angle < 0.0)
+        {
+            angle += 360.0;
+        }
+        return angle;
     }
 
     public static void main(String[] args) {
