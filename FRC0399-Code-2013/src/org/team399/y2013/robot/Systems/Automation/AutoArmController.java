@@ -22,33 +22,27 @@ public class AutoArmController {
     
     private PulseTriggerBoolean lockTriggerWatcher = new PulseTriggerBoolean();
     
-    public AutoArmController(Arm arm, EagleEye eye) {
+    public AutoArmController(Arm arm) {
         this.arm = arm;
-        this.eye = eye;
+    }
+    
+    public void setTargetData(boolean found, double x, double y, 
+                              double azimuth, double altitude) {
+        
     }
     
     public void requestLock(boolean state) {
-        wantLock = state;
     }
     
     public void start() {
-        eye.start();
     }
     
     public double getArmSet() {
-        return armSet;
+        return 0;
     }
     
     public void run() {
-        lockTriggerWatcher.set(wantLock);
-        boolean isLock = lockTriggerWatcher.get();
-        eye.requestNewImage(isLock);
         
-        if(isLock) {
-           // armSet = (eye.getHighestTarget().y-Constants.AUTO_AIM_ARM_Y_OFFSET) * Constants.AUTO_AIM_ARM_PXL_TO_ANGLE;
-        } else {
-            armSet = 0;
-        }
     }
     
 }

@@ -91,7 +91,7 @@ public class DaisyCVWidget extends WPICameraExtension {
         {
             try
             {
-                yaw = Robot.getTable().getNumber("pitch");
+                yaw = Robot.getTable().getNumber("yaw");
             }
             catch( NoSuchElementException e)
             { }

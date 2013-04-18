@@ -37,6 +37,17 @@ public class Constants {
     public static final boolean HIGH_GEAR = true;
     public static final boolean LOW_GEAR = true;
     public static final int SHIFTER_PORT = 8;
+    public static final double DRIVE_HIGH_MAX_SPEED_FPS = 16.5;
+    public static final double DRIVE_LOW_MAX_SPEED_FPS  = 6.0;
+    
+    
+    //Drive algorithm constants
+    public static final double CD_SENS_HIGH         = 0.875;
+    public static final double CD_SENS_LOW          = 1.111;
+    public static final double CD_WHEEL_NONLIN_HIGH = 1.0;
+    public static final double CD_WHEEL_NONLIN_LOW  = 0.8;
+    public static final double CD_NEG_INERTIA       = 3.0;
+    
     
     //Climber Constants:
     public static final int WINCH_PORT = 5;

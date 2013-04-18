@@ -76,12 +76,12 @@ public class DriveTrain {
         old_wheel = wheel;
 
         if (gear == Constants.HIGH_GEAR) {
-            wheelNonLinearity = 1.0;        //Used to be .9 higher is less sensitive
+            wheelNonLinearity = Constants.CD_WHEEL_NONLIN_HIGH;        //Used to be .9 higher is less sensitive
             // Apply a sin function that's scaled to make it feel bette
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
         } else {
-            wheelNonLinearity = 0.8;
+            wheelNonLinearity = Constants.CD_WHEEL_NONLIN_LOW;
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
@@ -89,19 +89,19 @@ public class DriveTrain {
 
         double neg_inertia_scalar;
         if (gear == Constants.HIGH_GEAR) {
-            neg_inertia_scalar = 3;
-            sensitivity = 1.15;
+            neg_inertia_scalar = Constants.CD_NEG_INERTIA;
+            sensitivity = Constants.CD_SENS_HIGH;
         } else {
             if (wheel * neg_inertia > 0) {
-                neg_inertia_scalar = 5;
+                neg_inertia_scalar = Constants.CD_NEG_INERTIA*1.66;
             } else {
                 if (Math.abs(wheel) > 0.65) {
-                    neg_inertia_scalar = 10;
+                    neg_inertia_scalar = Constants.CD_NEG_INERTIA*3.33;
                 } else {
-                    neg_inertia_scalar = 3;
+                    neg_inertia_scalar = Constants.CD_NEG_INERTIA;
                 }
             }
-            sensitivity = 1.11; //lower is less sensitive
+            sensitivity = Constants.CD_SENS_LOW; //lower is less sensitive
 
             if (Math.abs(throttle) > 0.1) {
                 sensitivity = .9 - (.9 - sensitivity) / Math.abs(throttle);
@@ -180,6 +180,36 @@ public class DriveTrain {
         double dif = throttle - turn;
 
         tankDrive(sum, dif);
+    }
+    
+    /**
+     * Sets drive to a naive assumption of the drivetrain speed. Use for simple auton stuff
+     * Use with caution at slower speeds.
+     * @param left left speed in feet/sec
+     * @param right right speed in feet/sec
+     */
+    public void driveSpeed(double left, double right) {
+        double leftOut = 0;
+        double rightOut = 0;
+        
+        
+        if(gear == Constants.HIGH_GEAR) {
+            left = EagleMath.cap(left, -Constants.DRIVE_HIGH_MAX_SPEED_FPS, 
+                Constants.DRIVE_HIGH_MAX_SPEED_FPS);
+            right = EagleMath.cap(right, -Constants.DRIVE_HIGH_MAX_SPEED_FPS, 
+                Constants.DRIVE_HIGH_MAX_SPEED_FPS);
+            leftOut = left/Constants.DRIVE_HIGH_MAX_SPEED_FPS;
+            rightOut = right/Constants.DRIVE_HIGH_MAX_SPEED_FPS;
+        } else {
+            left = EagleMath.cap(left, -Constants.DRIVE_LOW_MAX_SPEED_FPS, 
+                Constants.DRIVE_LOW_MAX_SPEED_FPS);
+            right = EagleMath.cap(right, -Constants.DRIVE_LOW_MAX_SPEED_FPS, 
+                Constants.DRIVE_LOW_MAX_SPEED_FPS);
+            leftOut  = left/Constants.DRIVE_LOW_MAX_SPEED_FPS;
+            rightOut = right/Constants.DRIVE_LOW_MAX_SPEED_FPS;
+        }
+        
+        tankDrive(leftOut, rightOut);
     }
 
     public double twoStickToTurning(double left, double right) {

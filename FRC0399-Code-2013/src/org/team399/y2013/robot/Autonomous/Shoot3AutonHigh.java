@@ -16,12 +16,10 @@ public class Shoot3AutonHigh {
 
     static AutonomousTimer timer = new AutonomousTimer();
     private static long elapsedTime = 0, start = 0;
-    private static long timeDelay = 0;
-    static double waitForArmDelay = .75;
-    static double feedToRollerDelay = .5;
-    static double kickerResetDelay = .25;
-    static double feedToKickerDelay = 1.0;
     
+    private static long timeDelay = 0;
+    private static double waitForArmDelay = .75;
+
 
     public static void start() {
         start = System.currentTimeMillis();
@@ -57,7 +55,7 @@ public class Shoot3AutonHigh {
             Timer.delay(waitForArmDelay + (timeDelay / 1000));
 
             for(int i = 0; i < 5; i++) {
-                shootOneDisc();
+                AutonCommon.shootOneDisc();
             }
             
             Main.arm.setPointRotations(Constants.ARM_STOW_UP);
@@ -76,15 +74,5 @@ public class Shoot3AutonHigh {
 
     }
 
-    public static void shootOneDisc() {
-        Main.feeder.setKicker(Constants.KICKER_OUT);
-        Main.feeder.setRoller(0);
-        Timer.delay(feedToRollerDelay);
-
-        Main.feeder.setKicker(Constants.KICKER_IN);
-        Timer.delay(kickerResetDelay);
-
-        Main.feeder.setRoller(1.0);
-        Timer.delay(feedToKickerDelay);
-    }
+    
 }

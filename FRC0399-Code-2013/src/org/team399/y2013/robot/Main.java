@@ -67,6 +67,7 @@ public class Main extends IterativeRobot {
         comp.start();
         arm.setEnabled(true);
         System.out.println("Robot is done initializing");
+        SmartDashboard.putData("AutonChooser", autonChooser);
 //        eye.start();
 //        eye.requestNewImage(false);
     }
@@ -142,8 +143,6 @@ public class Main extends IterativeRobot {
         cameraButton.set(rightJoy.getRawButton(8));
         camButtonOut = cameraButton.get();
         
-        
-        
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
             climber.set(Constants.CLIMBER_UP_SPEED);
@@ -152,8 +151,6 @@ public class Main extends IterativeRobot {
         } else {
             climber.set(0);
         }
-        
-        
         
         double leftAdjust = 0;
         double rightAdjust = 0;
@@ -207,15 +204,21 @@ public class Main extends IterativeRobot {
         double x = SmartDashboard.getNumber("TargetX", 0.0);
         x = EagleMath.cap(x, -.3, 3);
         if(Math.abs(x) < .1) {
-            x *= 5;
+            x = 0;
         }
         return x;
     }
     
     double autoPitch() {
-        double y = SmartDashboard.getNumber("TargetY", 0.0);
-        y*=.5;
-        return y;
+        SmartDashboard.putNumber("pitch", 90.0-arm.toDegrees(arm.getActual()));
+        double altitude = SmartDashboard.getNumber("altitude", 0.0);
+        if(cameraButton.get()) {
+            altitude = -altitude + 90;
+            altitude = arm.fromDegrees(altitude);
+            return altitude;
+        } else {
+            return 0;
+        }
     }
     
     double armSet = Constants.ARM_STOW_UP;
@@ -246,13 +249,10 @@ public class Main extends IterativeRobot {
         
         if (operatorJoy.getButton(1)) {
             isShooting = true;
-            //shooter.setMotors(-1);
-            shooterSet = 18000.0;
+            shooterSet = 1800.0;
         } else if (operatorJoy.getButton(2)) {
             isShooting = true;
-            //shooter.setIsClosedLoop(false);
-            //shooter.setMotors(-1);
-            shooterSet = 25000.0;
+            shooterSet = 2500.0;
         } else if (operatorJoy.getButton(3)) {
             isShooting = true;
             shooterSet = Constants.SHOOTER_SHOT;
@@ -337,6 +337,8 @@ public class Main extends IterativeRobot {
         SmartDashboard.putBoolean("Arm CAN fault", arm.getCurrentOutput() == -1);
         SmartDashboard.putNumber("Arm Actual - Deg", arm.toDegrees(arm.getActual()));
         SmartDashboard.putNumber("Arm Set - Deg", arm.toDegrees(arm.getSetpoint()));
+        
+        //SmartDashboard.putNumber("")
         
         SmartDashboard.putNumber("Left Drive Output", drive.leftOutput);
         SmartDashboard.putNumber("Right Drive Output", drive.rightOutput);
