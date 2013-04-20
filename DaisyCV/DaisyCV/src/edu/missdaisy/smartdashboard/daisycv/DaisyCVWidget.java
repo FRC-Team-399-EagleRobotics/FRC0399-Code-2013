@@ -261,8 +261,6 @@ public class DaisyCVWidget extends WPICameraExtension {
                 WPIColor.BLACK,
                 2);
 
-
-
         DaisyExtensions.releaseMemory();
 
         //System.gc();

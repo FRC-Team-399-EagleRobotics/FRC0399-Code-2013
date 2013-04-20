@@ -7,6 +7,7 @@ package org.team399.y2013.robot.Autonomous;
 import edu.wpi.first.wpilibj.Timer;
 import org.team399.y2013.robot.Constants;
 import org.team399.y2013.robot.Main;
+import org.team399.y2013.robot.Robot;
 
 /**
  *
@@ -23,10 +24,10 @@ public class Shoot3AutonHigh {
 
     public static void start() {
         start = System.currentTimeMillis();
-        Main.shooter.start();
-        Main.shooter.setShooterSpeed(7900);
-        Main.arm.setPointRotations(Constants.ARM_MID_SHOT);
-        Main.arm.setEnabled(true);
+        Main.robot.shooter.start();
+        Main.robot.shooter.setShooterSpeed(7900);
+        Main.robot.arm.setPointRotations(Constants.ARM_MID_SHOT);
+        Main.robot.arm.setEnabled(true);
         System.out.println("Init'd auton");
         finished = false;
     }
@@ -34,10 +35,10 @@ public class Shoot3AutonHigh {
     public static void start(long delay) {
         timeDelay = delay;
         start = System.currentTimeMillis();
-        Main.shooter.start();
-        Main.shooter.setShooterSpeed(7900);
-        Main.arm.setPointRotations(Constants.ARM_MID_SHOT);
-        Main.arm.setEnabled(true);
+        Main.robot.shooter.start();
+        Main.robot.shooter.setShooterSpeed(7900);
+        Main.robot.arm.setPointRotations(Constants.ARM_MID_SHOT);
+        Main.robot.arm.setEnabled(true);
         System.out.println("Init'd auton");
         finished = false;
         timer.start();
@@ -51,26 +52,24 @@ public class Shoot3AutonHigh {
         elapsedTime = System.currentTimeMillis() - start;
 
         if (!finished) {
-            Main.arm.setPointRotations(Constants.ARM_AUTON_SHOT);
+            Main.robot.arm.setPointRotations(Constants.ARM_AUTON_SHOT);
             Timer.delay(waitForArmDelay + (timeDelay / 1000));
 
             for(int i = 0; i < 5; i++) {
                 AutonCommon.shootOneDisc();
             }
             
-            Main.arm.setPointRotations(Constants.ARM_STOW_UP);
+            Main.robot.arm.setPointRotations(Constants.ARM_STOW_UP);
             Timer.delay(waitForArmDelay);
             
-            Main.drive.setShifter(Constants.LOW_GEAR);
-            Main.drive.tankDrive(.5, .5);
+            Main.robot.drive.setShifter(Constants.LOW_GEAR);
+            Main.robot.drive.tankDrive(.5, .5);
             Timer.delay(3.0);
 
             finished = true;
         }
 
-        Main.drive.tankDrive(0, 0);
-        Main.feeder.setRoller(0);
-        Main.shooter.setShooterSpeed(0);
+        AutonCommon.stop();
 
     }
 

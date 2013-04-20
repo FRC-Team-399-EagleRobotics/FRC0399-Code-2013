@@ -4,7 +4,6 @@
  */
 package org.team399.y2013.robot;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 /**
  * Constants file containing all of the seldom changed values such as ports,

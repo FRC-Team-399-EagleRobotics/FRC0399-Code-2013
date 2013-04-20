@@ -14,7 +14,6 @@ import org.team399.y2013.robot.Constants;
  * @author Jeremy
  */
 public class Arm {
-    
 
     private CANJaguar arm = null;
     private double ARM_P = Constants.ARM_P, ARM_I = Constants.ARM_I, ARM_D = Constants.ARM_D;
@@ -23,6 +22,7 @@ public class Arm {
     private int ARM_ID = Constants.ARM_ID;
     private static Arm instance = null;
     private DigitalInput zeroSwitch;
+    private double current_position = 0.0;
 
     public static Arm getInstance() {
         if (instance == null) {
@@ -33,16 +33,18 @@ public class Arm {
 
     private Arm() {
         int initCounter = 0;
-        
+
         zeroSwitch = new DigitalInput(Constants.ZERO_SWITCH_SENSOR);
-        
+
         while (initCounter <= 10 && arm == null) {
             arm = initializeArmJaguar(arm, ARM_ID);
             System.out.println("Arm initialized!");
             initCounter++;
         }
-        
-        if(initCounter >= 10) System.out.println("Arm Jag init failed after 10 attempts");
+
+        if (initCounter >= 10) {
+            System.out.println("Arm Jag init failed after 10 attempts");
+        }
         setpoint = Constants.ARM_STOW_UP;
     }
 
@@ -54,6 +56,7 @@ public class Arm {
         double angle = -1;
         try {
             angle = arm.getPosition();
+            this.current_position = angle;
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in getAngle");
             System.out.println(t);
@@ -62,19 +65,20 @@ public class Arm {
         }
         return angle;
     }
-    
+
     /**
-     * Returns a setpoint in rotations coverted from degrees from horizontal on the arm
-     * Usage: setPointRotations(fromDegrees(angle))
+     * Returns a setpoint in rotations coverted from degrees from horizontal on
+     * the arm Usage: setPointRotations(fromDegrees(angle))
+     *
      * @param angle
-     * @return 
+     * @return
      */
     public double fromDegrees(double angle) {
         angle /= Constants.DEGREES_PER_TURN;
-        angle = Constants.ARM_STOW_UP+angle;
+        angle = Constants.ARM_STOW_UP + angle;
         return angle;
     }
-    
+
     public double toDegrees(double turns) {
         double answer;
         answer = turns;
@@ -82,41 +86,54 @@ public class Arm {
         answer *= Constants.DEGREES_PER_TURN;
         return answer;
     }
-    
     PulseTriggerBoolean zSwitchWatcher = new PulseTriggerBoolean();
-    
+
     public void autoZero() {
         zSwitchWatcher.set(getZeroSwitch());
-        if(zSwitchWatcher.get()) {
-            System.out.println("Arm Zero Actuated!");
-            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
-            System.out.println("Old UpStow: " + Constants.ARM_STOW_UP);
-            Constants.ARM_LOWER_LIM = getActual()-1.65;
-            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
-            System.out.println("New UpStow: " + Constants.ARM_STOW_UP);
-            
-        }
+//        if (zSwitchWatcher.get()) {
+//            System.out.println("Arm Zero Actuated!");
+//            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
+//            System.out.println("Old UpStow: " + Constants.ARM_STOW_UP);
+//            Constants.ARM_LOWER_LIM = getActual() - 1.65;
+//            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
+//            System.out.println("New UpStow: " + Constants.ARM_STOW_UP);
+//
+//        }
     }
-    
+
     /**
      * Sets the arm setpoint in terms of pot rotations
+     *
      * @param setpoint setpoint in rotations
      */
     public void setPointRotations(double setpoint) {
-        if(setpoint < 0) setpoint = 0;  //Clamp setpoint to 0-10.
-        if(setpoint > 10) setpoint = 10;
-        if(setpoint < Constants.ARM_LOWER_LIM) setpoint = Constants.ARM_LOWER_LIM;
-        if(setpoint > Constants.ARM_UPPER_LIM) setpoint = Constants.ARM_UPPER_LIM;
+        System.out.println("Changing Arm Position. Old: " + this.setpoint + ". New: " + setpoint);
+        if (setpoint < 0) {
+            setpoint = 0;  //Clamp setpoint to 0-10.
+        }
+        if (setpoint > 10) {
+            setpoint = 10;
+        }
+        if (setpoint < Constants.ARM_LOWER_LIM) {
+            setpoint = Constants.ARM_LOWER_LIM;
+        }
+        if (setpoint > Constants.ARM_UPPER_LIM) {
+            setpoint = Constants.ARM_UPPER_LIM;
+        }
         //this.setpoint = 1 * setpoint;	//some scalar from angle to pot turns
 //        if(!getZeroSwitch()) {
-            this.setpoint = setpoint;
+        this.setpoint = setpoint;
 //        }
         try {
-    //        arm.changeControlMode(CANJaguar.ControlMode.kPosition);
-            if(arm.getX() <= 1.0 || arm.getX() >= 9.0) {
+            //        arm.changeControlMode(CANJaguar.ControlMode.kPosition);
+            if (this.current_position <= 1.0 || this.current_position >= 9.0) {
+                faultCondition();
                 System.out.println("arm pot fault. consider switching to open loop");
+                //arm.enableControl();
+            } else {
+                arm.setX(this.setpoint);
             }
-            arm.setX(this.setpoint);
+            
         } catch (Throwable t) {
             System.err.println("ARM CAN Error in setpoint change");
             System.out.println(t);
@@ -124,11 +141,23 @@ public class Arm {
             arm = initializeArmJaguar(arm, ARM_ID);
         }
     }
-    
-    public void setBrake(boolean wantBrake) {
-        
+
+    private void faultCondition() {
         try {
-            if(wantBrake) {
+            System.out.println("Arm Position Fault");
+            //arm.disableControl();
+        } catch (Throwable t) {
+            System.err.println("ARM CAN Error in setpoint change");
+            System.out.println(t);
+
+            arm = initializeArmJaguar(arm, ARM_ID);
+        }
+    }
+
+    public void setBrake(boolean wantBrake) {
+
+        try {
+            if (wantBrake) {
                 arm.configNeutralMode(CANJaguar.NeutralMode.kBrake);
             } else {
                 arm.configNeutralMode(CANJaguar.NeutralMode.kCoast);
@@ -140,11 +169,11 @@ public class Arm {
             arm = initializeArmJaguar(arm, ARM_ID);
         }
     }
-    
+
     public boolean getZeroSwitch() {
         return !zeroSwitch.get();
     }
-    
+
     public double getCurrentOutput() {
         double answer = -1;
         try {
@@ -154,7 +183,7 @@ public class Arm {
             System.out.println(t);
             arm = initializeArmJaguar(arm, ARM_ID);
         }
-        
+
         return answer;
     }
 
@@ -191,7 +220,6 @@ public class Arm {
         }
 
     }
-    
 
     private CANJaguar initializeArmJaguar(CANJaguar armJag, int CAN_ID) {
 
@@ -205,7 +233,7 @@ public class Arm {
                 // Change Jag to position mode, so that the encoder configuration can be stored in its RAM
                 armJag.changeControlMode(CANJaguar.ControlMode.kPosition);
                 //armJag.enableControl();
-                
+
                 armJag.setPositionReference(CANJaguar.PositionReference.kPotentiometer);
                 armJag.configPotentiometerTurns(10);
 

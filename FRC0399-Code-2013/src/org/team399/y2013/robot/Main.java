@@ -7,21 +7,13 @@
 package org.team399.y2013.robot;
 
 import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import org.team399.y2013.Utilities.EagleMath;
-import org.team399.y2013.robot.Systems.Arm;
-import org.team399.y2013.robot.Systems.DriveTrain;
-import org.team399.y2013.robot.Systems.Feeder;
-import org.team399.y2013.robot.Systems.Intake;
-import org.team399.y2013.robot.Systems.Shooter;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.team399.y2013.Utilities.GamePad;
 import org.team399.y2013.Utilities.PulseTriggerBoolean;
+import org.team399.y2013.robot.Autonomous.Shoot2CenterlineD;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonHigh;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonMid;
-import org.team399.y2013.robot.Systems.Automation.AutoShootController;
-import org.team399.y2013.robot.Systems.Climber;
-import org.team399.y2013.robot.Systems.Imaging.EagleEye;
 
 
 /**
@@ -36,83 +28,68 @@ public class Main extends IterativeRobot {
     Joystick leftJoy = new Joystick(Constants.DRIVER_LEFT_USB);
     Joystick rightJoy = new Joystick(Constants.DRIVER_RIGHT_USB);
     GamePad operatorJoy = new GamePad(Constants.OPERATOR_USB);
-    public static Arm arm = null;
-    public static Shooter shooter = Shooter.getInstance();
-    public static DriveTrain drive = new DriveTrain(Constants.DRIVE_LEFT_A,
-            Constants.DRIVE_LEFT_B,
-            Constants.DRIVE_RIGHT_A,
-            Constants.DRIVE_RIGHT_B);
-    public static Feeder feeder = new Feeder(Constants.FEEDER_MOTOR,
-            Constants.KICKER_PORT,
-            Constants.FLAP_PORTA,
-            Constants.FLAP_PORTB
-            );
-    public static Intake intake = new Intake(Constants.INTAKE_MOTOR,
-            Constants.INTAKE_SENSOR);
-    public static Climber climber = new Climber(Constants.WINCH_PORT, Constants.LIMIT_SWITCH_PORT);
-    public static Compressor comp = new Compressor(Constants.COMPRESSOR_SWITCH,
-            Constants.COMPRESSOR_RELAY);
-    //public static EagleEye eye = new EagleEye();
-    public static AutoShootController autoshoot = new AutoShootController(shooter, feeder);
-    SendableChooser autonChooser = new SendableChooser();
     
+    public static Robot robot = null;
 
+    public Main() {
+    }
+    
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-        shooter.start();
-        arm = Arm.getInstance();
-        comp.start();
-        arm.setEnabled(true);
-        System.out.println("Robot is done initializing");
-        SmartDashboard.putData("AutonChooser", autonChooser);
-//        eye.start();
-//        eye.requestNewImage(false);
+        robot = Robot.getInstance();
+        System.out.println("Robot Done Initializing...");
+        System.out.println("System states at boot: ");
+        System.out.println("Arm Position: " + robot.arm.getActual());
     }
     
     public void disabledInit() {
-        arm.setBrake(true);
-        autonChooser.addDefault("HIGH", new Integer(0));
-        autonChooser.addObject("MID", new Integer(1));
-        autonChooser.addObject("STATIC", new Integer(2));
+        
+        robot.arm.setBrake(true);
     }
 
     public void autonomousInit() {
-        arm.setBrake(true);
+        robot.arm.setBrake(true);
         if (auton == 0) {
             Shoot3AutonHigh.start();
         } else if (auton == 1) {
             Shoot3AutonMid.start();
+        } else if (auton == 2) {
+            Shoot2CenterlineD.start();
         }
-        arm.setPointRotations(Constants.ARM_MID_SHOT);
+        robot.arm.setPointRotations(Constants.ARM_MID_SHOT);
     }
 
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
-        arm.autoZero();
+        robot.arm.autoZero();
         if (auton == 0) {
             Shoot3AutonHigh.run();
         } else if (auton == 1) {
             Shoot3AutonMid.run();
+        } else if (auton == 2) {
+            Shoot2CenterlineD.run();
         }
 
     }
     int auton = 0;
 
     public void disabledPeriodic() {
-        arm.autoZero();
+        robot.arm.autoZero();
         
-        arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
+        robot.arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();                               //Update diagnostic dashboard
         
         if (leftJoy.getRawButton(1)) {
             auton = 0;
         } else if (rightJoy.getRawButton(1)) {
             auton = 1;
+        } else if(leftJoy.getRawButton(2)) {
+            auton = 2;
         } else {
             //auton = ((Integer)autonChooser.getSelected()).intValue();
         }
@@ -122,13 +99,15 @@ public class Main extends IterativeRobot {
             SmartDashboard.putString("Auton", "HIGH");
         } else if (auton == 1) {
             SmartDashboard.putString("Auton", "MID");
+        } else if (auton == 2) {
+            SmartDashboard.putString("Auton", "ANTICENTERLINE");
         } else {
             SmartDashboard.putString("Auton", "INVALID!");
         }
     }
     
     public void teleopInit() {
-        arm.setBrake(true);
+        robot.arm.setBrake(true);
     }
 
     PulseTriggerBoolean cameraButton = new PulseTriggerBoolean();
@@ -145,11 +124,11 @@ public class Main extends IterativeRobot {
         
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
-            climber.set(Constants.CLIMBER_UP_SPEED);
+            robot.climber.set(Constants.CLIMBER_UP_SPEED);
         } else if (leftJoy.getRawButton(7)) {
-            climber.set(Constants.CLIMBER_DOWN_SPEED);
+            robot.climber.set(Constants.CLIMBER_DOWN_SPEED);
         } else {
-            climber.set(0);
+            robot.climber.set(0);
         }
         
         double leftAdjust = 0;
@@ -172,7 +151,7 @@ public class Main extends IterativeRobot {
             rightAdjust = -.25;
         }
         
-        if(drive.gear == Constants.LOW_GEAR) {
+        if(robot.drive.gear == Constants.LOW_GEAR) {
             leftAdjust *= .75;
             rightAdjust*= .75;
         }
@@ -185,17 +164,17 @@ public class Main extends IterativeRobot {
         
         
         boolean shiftButton = rightJoy.getRawButton(1);
-        drive.setShifter(shiftButton);
+        robot.drive.setShifter(shiftButton);
         
         if(leftAdjust != 0 || rightAdjust != 0) {
-            drive.tankDrive(leftJoy.getRawAxis(2)+leftAdjust, rightJoy.getRawAxis(2)+rightAdjust);
+            robot.drive.tankDrive(leftJoy.getRawAxis(2)+leftAdjust, rightJoy.getRawAxis(2)+rightAdjust);
         } else {
-            drive.cheesyDrive
-                    (drive.twoStickToTurning(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)), 
-                     drive.twoStickToThrottle(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)));
+            robot.drive.cheesyDrive
+                    (robot.drive.twoStickToTurning(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)), 
+                     robot.drive.twoStickToThrottle(leftJoy.getRawAxis(2), rightJoy.getRawAxis(2)));
         }
         
-        arm.autoZero();
+        robot.arm.autoZero();
         
         operator();
     }
@@ -210,11 +189,11 @@ public class Main extends IterativeRobot {
     }
     
     double autoPitch() {
-        SmartDashboard.putNumber("pitch", 90.0-arm.toDegrees(arm.getActual()));
+        SmartDashboard.putNumber("pitch", 90.0-robot.arm.toDegrees(robot.arm.getActual()));
         double altitude = SmartDashboard.getNumber("altitude", 0.0);
         if(cameraButton.get()) {
             altitude = -altitude + 90;
-            altitude = arm.fromDegrees(altitude);
+            altitude = robot.arm.fromDegrees(altitude);
             return altitude;
         } else {
             return 0;
@@ -229,18 +208,18 @@ public class Main extends IterativeRobot {
         double manScalar = Constants.ARM_MANUAL_INPUT_SCALAR;
 
         if (operatorJoy.getButton(5)) {
-            feeder.setRoller(1.0);
+            robot.feeder.setRoller(1.0);
         } else if (operatorJoy.getButton(7)) {
-            feeder.setRoller(-1.0);
+            robot.feeder.setRoller(-1.0);
         } else {
-            feeder.setRoller(0);
+            robot.feeder.setRoller(0);
         }
         boolean wantShoot = operatorJoy.getButton(6);
         
         if (wantShoot) {
-            feeder.setKicker(Constants.KICKER_OUT);
+            robot.feeder.setKicker(Constants.KICKER_OUT);
         } else {
-            feeder.setKicker(Constants.KICKER_IN);
+            robot.feeder.setKicker(Constants.KICKER_IN);
         }
 
         boolean isShooting = false; //Flag to indicate operator is running the shooter
@@ -265,9 +244,9 @@ public class Main extends IterativeRobot {
         //autoshoot.run(shooterSet, wantShoot);
         
         if (operatorJoy.getButton(8) || leftJoy.getRawButton(1)) {
-            feeder.setFlapper(Constants.FLAP_OUT);
+            robot.feeder.setFlapper(Constants.FLAP_OUT);
         } else {
-            feeder.setFlapper(Constants.FLAP_IN);
+            robot.feeder.setFlapper(Constants.FLAP_IN);
         }
 
         adjustUpButton.set(operatorJoy.getButton(9));
@@ -312,38 +291,38 @@ public class Main extends IterativeRobot {
             }
             fineAdjust *= EagleMath.deadband(fineAdjustInput, .05);
             
-            armSet = arm.getSetpoint() + coarseAdjust + fineAdjust;
+            armSet = robot.arm.getSetpoint() + coarseAdjust + fineAdjust;
         }
         
         
-        shooter.setShooterSpeed(shooterSet);
-        arm.setPointRotations(armSet);
+        robot.shooter.setShooterSpeed(shooterSet);
+        robot.arm.setPointRotations(armSet);
     }
     
     
 
     public void updateDashboard() {
-        SmartDashboard.putNumber("Shooter Actual Velocity", shooter.getVelocity());     //shooter current vel
-        SmartDashboard.putNumber("Shooter Set Velocity", shooter.getShooterSetSpeed()); //Shooter set vel
-        SmartDashboard.putNumber("Shooter A current", shooter.getCurrent(0));
-        SmartDashboard.putNumber("Shooter B current", shooter.getCurrent(1));
-        SmartDashboard.putNumber("Shooter C current", shooter.getCurrent(2));
-        SmartDashboard.putBoolean("Shooter IsAtTarget", shooter.isAtTargetSpeed());
+        SmartDashboard.putNumber("Shooter Actual Velocity", robot.shooter.getVelocity());     //shooter current vel
+        SmartDashboard.putNumber("Shooter Set Velocity", robot.shooter.getShooterSetSpeed()); //Shooter set vel
+        SmartDashboard.putNumber("Shooter A current", robot.shooter.getCurrent(0));
+        SmartDashboard.putNumber("Shooter B current", robot.shooter.getCurrent(1));
+        SmartDashboard.putNumber("Shooter C current", robot.shooter.getCurrent(2));
+        SmartDashboard.putBoolean("Shooter IsAtTarget", robot.shooter.isAtTargetSpeed());
         
-        SmartDashboard.putNumber("Arm Actual Position", arm.getActual());               //arm actual pos
-        SmartDashboard.putNumber("Arm Set Position", arm.getSetpoint());                //arm set pos
-        SmartDashboard.putNumber("Arm offset", arm.getActual() - Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
-        SmartDashboard.putNumber("Arm current", arm.getCurrentOutput());
-        SmartDashboard.putBoolean("Arm CAN fault", arm.getCurrentOutput() == -1);
-        SmartDashboard.putNumber("Arm Actual - Deg", arm.toDegrees(arm.getActual()));
-        SmartDashboard.putNumber("Arm Set - Deg", arm.toDegrees(arm.getSetpoint()));
+        SmartDashboard.putNumber("Arm Actual Position", robot.arm.getActual());               //arm actual pos
+        SmartDashboard.putNumber("Arm Set Position", robot.arm.getSetpoint());                //arm set pos
+        SmartDashboard.putNumber("Arm offset", robot.arm.getActual() - Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
+        SmartDashboard.putNumber("Arm current", robot.arm.getCurrentOutput());
+        SmartDashboard.putBoolean("Arm CAN fault", robot.arm.getCurrentOutput() == -1);
+        SmartDashboard.putNumber("Arm Actual - Deg", robot.arm.toDegrees(robot.arm.getActual()));
+        SmartDashboard.putNumber("Arm Set - Deg", robot.arm.toDegrees(robot.arm.getSetpoint()));
         
         //SmartDashboard.putNumber("")
         
-        SmartDashboard.putNumber("Left Drive Output", drive.leftOutput);
-        SmartDashboard.putNumber("Right Drive Output", drive.rightOutput);
+        SmartDashboard.putNumber("Left Drive Output", robot.drive.leftOutput);
+        SmartDashboard.putNumber("Right Drive Output", robot.drive.rightOutput);
         
-        SmartDashboard.putBoolean("Climber upper limit", climber.getSwitch());
-        SmartDashboard.putBoolean("Arm Zero Switch", arm.getZeroSwitch());
+        SmartDashboard.putBoolean("Climber upper limit", robot.climber.getSwitch());
+        SmartDashboard.putBoolean("Arm Zero Switch", robot.arm.getZeroSwitch());
     }
 }
