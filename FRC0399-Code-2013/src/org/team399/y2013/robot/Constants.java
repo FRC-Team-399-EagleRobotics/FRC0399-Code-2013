@@ -38,6 +38,7 @@ public class Constants {
     public static final int SHIFTER_PORT = 8;
     public static final double DRIVE_HIGH_MAX_SPEED_FPS = 16.5;
     public static final double DRIVE_LOW_MAX_SPEED_FPS  = 6.0;
+    public static final boolean YAW_GYRO_ENABLED = true;       //Change this to true on comp bot
     
     
     //Drive algorithm constants
@@ -68,7 +69,7 @@ public class Constants {
     
     //Intake Constants:
     public static final int INTAKE_MOTOR  = 7;// pre spring hook port 6;
-    public static final int INTAKE_SENSOR = 1;
+    public static final int INTAKE_SENSOR = 4;
     public static final double INTAKE_DISC_THRESH = 0.5;    //Intake sensor value when disc present
     
     //Shooter Constnats:
@@ -102,8 +103,8 @@ public class Constants {
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
     public static double ARM_STOW_UP     = ARM_LOWER_LIM+.37;
-    public static double ARM_INTAKE_LOAD = ARM_STOW_UP;
-    public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.66;
+    public static double ARM_INTAKE_LOAD = ARM_LOWER_LIM + 1.327;
+    public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.327;
     public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.28;
     public static double ARM_MID_SHOT    = ARM_LOWER_LIM + 1.42;
     public static double ARM_STOW_DOWN   = ARM_HUMAN_LOAD;
@@ -114,5 +115,13 @@ public class Constants {
     public static long AUTO_SHOOT_MIN_PERIOD = 375;
     
     public static double AUTO_AIM_ARM_PXL_TO_ANGLE = 0.002;   //Scalar to convert from pixels to arm angle
+    public static double VISION_OFFSET_REAR_CTR = -15.0;        //pbot is -15
+    public static double VISION_OFFSET_FRNT_CTR = -8.0;
+    public static double VISION_OFFSET_REAR_CNR = -12.0;
+
+    
+    public Constants() {
+    }
+
     //todo: organize these
 }

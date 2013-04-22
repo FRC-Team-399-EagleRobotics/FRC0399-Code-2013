@@ -247,19 +247,8 @@ public class DaisyCVWidget extends WPICameraExtension {
         }
 
         // Draw a crosshair
-        rawImage.drawLine(linePt1, linePt2, new WPIColor(139, 0, 139), 2);
-        rawImage.drawLine(new WPIPoint(0, rawImage.getHeight() / 2),
-                new WPIPoint(0, rawImage.getHeight() / 2),
-                WPIColor.GREEN,
-                2);
-        rawImage.drawLine(new WPIPoint(0, rawImage.getHeight() / 4),
-                new WPIPoint(0, rawImage.getHeight() / 4),
-                WPIColor.BLACK,
-                2);
-        rawImage.drawLine(new WPIPoint(0, rawImage.getHeight() * 3 / 4),
-                new WPIPoint(0, rawImage.getHeight() * 3 / 4),
-                WPIColor.BLACK,
-                2);
+        rawImage.drawLine(linePt1, linePt2, targetColor, 2);
+        
 
         DaisyExtensions.releaseMemory();
 

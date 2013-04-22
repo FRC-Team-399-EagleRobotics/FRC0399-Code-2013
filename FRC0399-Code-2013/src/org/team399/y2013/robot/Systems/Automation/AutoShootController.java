@@ -34,7 +34,7 @@ public class AutoShootController {
     public void run(double shooterSpeed, boolean wantShoot) {
         currentTime = System.currentTimeMillis();
         
-        m_shooter.setShooterSpeed(shooterSpeed);    //Be careful with conflicting calls...
+        //m_shooter.setShooterSpeed(shooterSpeed);    //Be careful with conflicting calls...
         if (wantShoot) {
             if (isDiscStaged && isKickerLoaded && isReady) {
                 beginShotTime = System.currentTimeMillis();

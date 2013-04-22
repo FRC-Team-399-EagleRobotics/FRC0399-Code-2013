@@ -90,15 +90,15 @@ public class Arm {
 
     public void autoZero() {
         zSwitchWatcher.set(getZeroSwitch());
-//        if (zSwitchWatcher.get()) {
-//            System.out.println("Arm Zero Actuated!");
-//            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
-//            System.out.println("Old UpStow: " + Constants.ARM_STOW_UP);
-//            Constants.ARM_LOWER_LIM = getActual() - 1.65;
-//            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
-//            System.out.println("New UpStow: " + Constants.ARM_STOW_UP);
-//
-//        }
+        if (zSwitchWatcher.get()) {
+            System.out.println("Arm Zero Actuated!");
+            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
+            System.out.println("Old UpStow: " + Constants.ARM_STOW_UP);
+            Constants.ARM_LOWER_LIM = getActual() - 1.65;
+            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
+            System.out.println("New UpStow: " + Constants.ARM_STOW_UP);
+
+        }
     }
 
     /**
@@ -107,7 +107,7 @@ public class Arm {
      * @param setpoint setpoint in rotations
      */
     public void setPointRotations(double setpoint) {
-        System.out.println("Changing Arm Position. Old: " + this.setpoint + ". New: " + setpoint);
+        //System.out.println("Changing Arm Position. Old: " + this.setpoint + ". New: " + setpoint);
         if (setpoint < 0) {
             setpoint = 0;  //Clamp setpoint to 0-10.
         }

@@ -6,6 +6,7 @@ package org.team399.y2013.robot;
 
 import edu.wpi.first.wpilibj.Compressor;
 import org.team399.y2013.robot.Systems.Arm;
+import org.team399.y2013.robot.Systems.Automation.AutoShootController;
 import org.team399.y2013.robot.Systems.Climber;
 import org.team399.y2013.robot.Systems.DriveTrain;
 import org.team399.y2013.robot.Systems.Feeder;
@@ -25,9 +26,8 @@ public class Robot {
     public Feeder feeder;
     public Shooter shooter;
     public Compressor comp;
-    //public static EagleEye eye = new EagleEye();
-    //public static AutoShootController autoshoot = new AutoShootController(shooter, feeder);
-    //SendableChooser autonChooser = new SendableChooser();
+    public AutoShootController autoshoot;
+    
     public Arm arm;
     
     private Robot() {
@@ -38,7 +38,7 @@ public class Robot {
         shooter = Shooter.getInstance();
         comp = new Compressor(Constants.COMPRESSOR_SWITCH, Constants.COMPRESSOR_RELAY);        
         arm = Arm.getInstance();
-        
+        autoshoot = new AutoShootController(shooter, feeder);
         
         shooter.start();
         comp.start();

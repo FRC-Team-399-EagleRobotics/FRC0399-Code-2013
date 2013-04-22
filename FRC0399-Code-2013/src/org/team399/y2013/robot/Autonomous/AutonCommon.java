@@ -5,14 +5,15 @@
 package org.team399.y2013.robot.Autonomous;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.team399.y2013.Utilities.EagleMath;
 import org.team399.y2013.robot.Constants;
 import org.team399.y2013.robot.Main;
-import org.team399.y2013.robot.Robot;
 
 /**
- * Class that contains common autonomous or automated functions
- * use these only in auton.
+ * Class that contains common autonomous or automated functions use these only
+ * in auton.
+ *
  * @author Jeremy
  */
 public class AutonCommon {
@@ -39,29 +40,68 @@ public class AutonCommon {
     }
 
     /**
-     * Open loop drive distance function.
-     * Use caution with lower speeds in high gear, short distances in high gear.
+     * Open loop drive distance function. Use caution with lower speeds in high
+     * gear, short distances in high gear.
+     *
      * @param speed
      * @param distance
-     * @param gear 
+     * @param gear
      */
     public static void driveDistanceNaive(double speed, double distance, boolean gear) {
-        if(gear == Constants.LOW_GEAR) {
-            speed = EagleMath.cap(speed, -Constants.DRIVE_LOW_MAX_SPEED_FPS, 
-                                          Constants.DRIVE_LOW_MAX_SPEED_FPS);
+        if (gear == Constants.LOW_GEAR) {
+            //    speed = EagleMath.cap(speed, -Constants.DRIVE_LOW_MAX_SPEED_FPS, 
+            //                                  Constants.DRIVE_LOW_MAX_SPEED_FPS);
         }
-        double delayTime = distance/speed;
+        double delayTime = distance / speed;
         Main.robot.drive.setShifter(gear);
         Main.robot.drive.driveSpeed(speed, speed);
         Timer.delay(delayTime);
         Main.robot.drive.driveSpeed(0, 0);
     }
-    
+
+    public void waitForArm() {
+        int ctr = 0;
+        while ((Main.robot.arm.getSetpoint() - Main.robot.arm.getActual() > .075) || ctr >= 12) {
+            System.out.println("Waiting for arm to reach position");
+            Timer.delay(125);
+            ctr++;
+        }
+    }
+
     public static void stop() {
         Main.robot.drive.setShifter(Constants.LOW_GEAR);
         Main.robot.drive.tankDrive(0, 0);
         Main.robot.feeder.setRoller(0);
         Main.robot.shooter.setShooterSpeed(0);
     }
-    
+
+    public static double autoPitch() {
+
+        double altitude = SmartDashboard.getNumber("altitude", 0.0);
+        double range = SmartDashboard.getNumber("TargetRange", 0.0);
+        SmartDashboard.putNumber("pitch", 90.0 - Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
+
+        double offset = 0;
+
+
+        altitude = -altitude + 90;      //Get te complement of the altitude angle because arm is referenced from vertical.
+        //Auto range logic. Use at your own risk.
+        if (range < 300) {
+            //altitude += Constants.VISION_OFFSET_FRNT_CTR;
+            //System.out.println("Front Pyr Shot");
+        } else if (range >= 300 && range <= 550) {
+            //altitude += Constants.VISION_OFFSET_REAR_CTR;
+            //System.out.println("Rear Pyr Shot");
+        } else {
+            //altitude += Constants.VISION_OFFSET_REAR_CNR;
+            //System.out.println("Corner Pyr Shot");
+        }
+//            altitude += Constants.VISION_OFFSET_REAR_CTR;   //Offset for shots from scoring position
+        altitude = Main.robot.arm.fromDegrees(altitude);     //Convert to pot rotations for the arm
+        if (!SmartDashboard.getBoolean("found", false)) {
+            //altitude = 30;
+        }
+        altitude = EagleMath.cap(altitude, 5, 75);
+        return altitude;
+    }
 }

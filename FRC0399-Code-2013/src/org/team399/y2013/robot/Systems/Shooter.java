@@ -39,6 +39,7 @@ public class Shooter implements Runnable {
     private double velocity = 0.0;
     //private FIRFilter velocityFilter = new FIRFilter();
     private MovingAverage velFilt = new MovingAverage(10);
+    private int stable_counter = 0;
 
     public Shooter() // make sure that only this class can make instances of Shooter
     {
@@ -373,7 +374,13 @@ public class Shooter implements Runnable {
      * @return a flag indicating shooter is at target speed
      */
     public synchronized boolean isAtTargetSpeed() {
-        return (Math.abs(error) < 700) || !isClosedLoop;
+        boolean flag = (Math.abs(error) < 700) || !isClosedLoop;
+        if(flag) {
+            this.stable_counter++;
+        } else {
+            this.stable_counter = 0;
+        }
+        return flag && this.stable_counter >= 25;
     }
 
     /**

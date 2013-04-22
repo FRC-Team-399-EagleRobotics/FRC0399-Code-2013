@@ -17,11 +17,12 @@ import org.team399.y2013.robot.Constants;
 public class DriveTrain {
 
     private Talon m_leftA, m_leftB, m_rightA, m_rightB;
-    private Gyro yaw = new Gyro(2);
+    private Gyro yaw = new Gyro(1);
     private Gyro pitch = null;// new Gyro(3);
     private Solenoid shifter = new Solenoid(Constants.SHIFTER_PORT);
     private final double WHEEL_DIA = Constants.WHEEL_DIAMETER;
     public boolean gear = true;
+    
     
     public double leftOutput = 0;
     public double rightOutput = 0;
@@ -78,7 +79,7 @@ public class DriveTrain {
         if (gear == Constants.HIGH_GEAR) {
             wheelNonLinearity = Constants.CD_WHEEL_NONLIN_HIGH;        //Used to be .9 higher is less sensitive
             // Apply a sin function that's scaled to make it feel bette
-            wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
+//            wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
             wheel = Math.sin(Math.PI / 2.0 * wheelNonLinearity * wheel) / Math.sin(Math.PI / 2.0 * wheelNonLinearity);
         } else {
             wheelNonLinearity = Constants.CD_WHEEL_NONLIN_LOW;
@@ -88,9 +89,9 @@ public class DriveTrain {
         }
 
         double neg_inertia_scalar;
-        if (gear == Constants.HIGH_GEAR) {
+        if (gear != Constants.HIGH_GEAR) {
             neg_inertia_scalar = Constants.CD_NEG_INERTIA;
-            sensitivity = Constants.CD_SENS_HIGH;
+            sensitivity = Constants.CD_SENS_LOW;
         } else {
             if (wheel * neg_inertia > 0) {
                 neg_inertia_scalar = Constants.CD_NEG_INERTIA*1.66;
@@ -101,13 +102,13 @@ public class DriveTrain {
                     neg_inertia_scalar = Constants.CD_NEG_INERTIA;
                 }
             }
-            sensitivity = Constants.CD_SENS_LOW; //lower is less sensitive
+            sensitivity = Constants.CD_SENS_HIGH; //lower is less sensitive
 
             if (Math.abs(throttle) > 0.1) {
                 sensitivity = .9 - (.9 - sensitivity) / Math.abs(throttle);
             }
         }
-        neg_inertia_scalar *= .4;
+        //neg_inertia_scalar *= .4;
         double neg_inertia_power = neg_inertia * neg_inertia_scalar;
         if (Math.abs(throttle) >= 0.05 || quickTurn) {
             neg_inertia_accumulator += neg_inertia_power;
@@ -138,9 +139,9 @@ public class DriveTrain {
         }
 
         if(quickTurn) {
-            angular_power = EagleMath.signedSquare(angular_power, .75);   //make turning less sensitive under quickturn
+            angular_power = EagleMath.signedSquare(angular_power, 1);   //make turning less sensitive under quickturn
             if(Math.abs(angular_power) >= .745) {
-                angular_power = 1.0*EagleMath.signum(angular_power);
+            //    angular_power = 1.0*EagleMath.signum(angular_power);
             }
         }
         
@@ -225,7 +226,11 @@ public class DriveTrain {
      * @return 
      */
     public double getYaw() {
-        return yaw.getAngle();
+        if(Constants.YAW_GYRO_ENABLED) {
+            return yaw.getAngle();
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -313,4 +318,22 @@ public class DriveTrain {
     private double distanceControl(double distance, double maxSpeed) {
         return maxSpeed * (1 - MathUtils.pow(Math.E, -distAttenuation * distance));
     }
+    
+//    double error = 0;
+//    double prevError = 0;
+//    /**
+//     * Drive to a specified angle. 
+//     * @param throttle Throttle to drive in Y axis
+//     * @param angle angle to drive to
+//     */
+//    public void driveToAngle(double throttle, double angle) {
+//        double P = -.3,
+//                D = 0;
+//        error = angle - getYaw();
+//        double proportional = P * error;
+//        double derivative = error - prevError;
+//        double PID_Out = proportional - D * derivative;
+//        prevError = error;
+//        tankDrive((throttle) - PID_Out, (throttle) + PID_Out);
+//    }
 }
