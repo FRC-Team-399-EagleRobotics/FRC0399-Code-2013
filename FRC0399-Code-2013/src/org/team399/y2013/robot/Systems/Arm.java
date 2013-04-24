@@ -91,12 +91,12 @@ public class Arm {
     public void autoZero() {
         zSwitchWatcher.set(getZeroSwitch());
         if (zSwitchWatcher.get()) {
-            System.out.println("Arm Zero Actuated!");
-            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
-            System.out.println("Old UpStow: " + Constants.ARM_STOW_UP);
-            Constants.ARM_LOWER_LIM = getActual() - 1.65;
-            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
-            System.out.println("New UpStow: " + Constants.ARM_STOW_UP);
+//            System.out.println("Arm Zero Actuated!");
+//            System.out.println("Old Upper Limit: " + Constants.ARM_LOWER_LIM);
+//            System.out.println("Old UpStow: " + Constants.ARM_STOW_UP);
+//            Constants.ARM_LOWER_LIM = getActual() - 1.65;
+//            System.out.println("New Upper Limit: " + Constants.ARM_LOWER_LIM);
+//            System.out.println("New UpStow: " + Constants.ARM_STOW_UP);
 
         }
     }
@@ -130,6 +130,12 @@ public class Arm {
                 faultCondition();
                 System.out.println("arm pot fault. consider switching to open loop");
                 //arm.enableControl();
+                
+                //consider reinitializing arm here?
+                if(arm.getPowerCycled()) {
+                    System.out.println("Arm browned out/power cycled. reinitizing...");
+                    arm = initializeArmJaguar(arm, ARM_ID);
+                }
             } else {
                 arm.setX(this.setpoint);
             }

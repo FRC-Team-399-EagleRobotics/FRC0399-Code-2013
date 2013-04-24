@@ -56,6 +56,9 @@ public class AutonCommon {
         Main.robot.drive.setShifter(gear);
         Main.robot.drive.driveSpeed(speed, speed);
         Timer.delay(delayTime);
+        Main.robot.drive.driveSpeed(-.2*EagleMath.signum(speed), //quick power reversal to brake
+                -.2*EagleMath.signum(speed));
+        Timer.delay(100);
         Main.robot.drive.driveSpeed(0, 0);
     }
 
@@ -85,6 +88,35 @@ public class AutonCommon {
 
 
         altitude = -altitude + 90;      //Get te complement of the altitude angle because arm is referenced from vertical.
+        //Auto range logic. Use at your own risk.
+        if (range < 300) {
+            //altitude += Constants.VISION_OFFSET_FRNT_CTR;
+            //System.out.println("Front Pyr Shot");
+        } else if (range >= 300 && range <= 550) {
+            //altitude += Constants.VISION_OFFSET_REAR_CTR;
+            //System.out.println("Rear Pyr Shot");
+        } else {
+            //altitude += Constants.VISION_OFFSET_REAR_CNR;
+            //System.out.println("Corner Pyr Shot");
+        }
+//            altitude += Constants.VISION_OFFSET_REAR_CTR;   //Offset for shots from scoring position
+        altitude = Main.robot.arm.fromDegrees(altitude);     //Convert to pot rotations for the arm
+        if (!SmartDashboard.getBoolean("found", false)) {
+            //altitude = 30;
+        }
+        altitude = EagleMath.cap(altitude, 5, 75);
+        return altitude;
+    }
+    
+    public static double autoPitch(double offset) {
+
+        double altitude = SmartDashboard.getNumber("altitude", 0.0);
+        double range = SmartDashboard.getNumber("TargetRange", 0.0);
+        SmartDashboard.putNumber("pitch", 90.0 - Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
+
+        
+        altitude = -altitude + 90;      //Get te complement of the altitude angle because arm is referenced from vertical.
+        altitude += offset;
         //Auto range logic. Use at your own risk.
         if (range < 300) {
             //altitude += Constants.VISION_OFFSET_FRNT_CTR;

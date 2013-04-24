@@ -30,6 +30,7 @@ public class Main extends IterativeRobot {
     GamePad operatorJoy = new GamePad(Constants.OPERATOR_USB);
     public static Robot robot = null;
     SendableChooser autonChooser = new SendableChooser();
+    SendableChooser defArmPositionChooser = new SendableChooser();
 
     public Main() {
     }
@@ -46,23 +47,28 @@ public class Main extends IterativeRobot {
         autonChooser.addObject("DONOTHING", (new Integer(99)));
         SmartDashboard.putData("autonchooser", autonChooser);
 
+        defArmPositionChooser.addObject("UP-STOW", (new Integer(0)));
+        defArmPositionChooser.addObject("DOWN-STOW", (new Integer(0)));
+        defArmPositionChooser.addObject("UNDER-PYR-STOW", (new Integer(0)));
+        defArmPositionChooser.addObject("CURRENT-POS", (new Integer(0)));
+        SmartDashboard.putData("arm_position_chooser", defArmPositionChooser);
         System.out.println("Robot Done Initializing...");
         System.out.println("System states at boot: ");
         System.out.println("Arm Position: " + robot.arm.getActual());
+        System.out.println("Drive Yaw: " + robot.drive.getYaw());
+        System.out.println("");
     }
 
     public void disabledInit() {
-
         robot.arm.setBrake(true);
+        robot.arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
     }
     int auton = 0;
 
     public void disabledPeriodic() {
         robot.arm.autoZero();
-
-        robot.arm.setPointRotations(Constants.ARM_STOW_UP);    //Set arm setpoint to stowed up when disabled
         updateDashboard();                               //Update diagnostic dashboard
-        SmartDashboard.putData("autonchooser", autonChooser);
+        //SmartDashboard.putData("autonchooser", autonChooser);
 
         if (leftJoy.getRawButton(1)) {
             auton = 0;
@@ -74,16 +80,36 @@ public class Main extends IterativeRobot {
             auton = ((Integer) autonChooser.getSelected()).intValue();
         }
 
-
-        if (auton == 0) {                               //Displays selected auton
-            SmartDashboard.putString("Auton", "HIGH");
-        } else if (auton == 1) {
-            SmartDashboard.putString("Auton", "MID");
-        } else if (auton == 2) {
-            SmartDashboard.putString("Auton", "ANTICENTERLINE");
+        int defaultArmPositionIndex = ((Integer) autonChooser.getSelected()).intValue();
+        double armSet = 0;
+        if (defaultArmPositionIndex == 0) {          //Default to stow up once enabled
+            armSet = Constants.ARM_STOW_UP;
+        } else if (defaultArmPositionIndex == 1) {   //Default to stow down once enabled
+            armSet = Constants.ARM_STOW_DOWN;
+        } else if (defaultArmPositionIndex == 2) {   //default to angle stow once enabled
+            armSet = Constants.ARM_STOW_UP + .2;    //tune this for an under pyramid stow for the centerline auton
+        } else if (defaultArmPositionIndex == 3) {   //default to current arm position once enabled
+            armSet = robot.arm.getActual();
         } else {
-            SmartDashboard.putString("Auton", "INVALID!");
+            armSet = Constants.ARM_STOW_UP;
         }
+
+        robot.arm.setPointRotations(armSet);    //Set arm setpoint to stowed up when disabled
+
+        String autonName = "";
+        if (auton == 0) {                               //Displays selected auton
+            autonName = "HIGH";
+        } else if (auton == 1) {
+            autonName = "MID";
+        } else if (auton == 2) {
+            autonName = "ANTICENTERLINE";
+        } else if (auton == 99) {
+            autonName = "DONOTHING";
+        } else {
+            autonName = "INVALID";
+        }
+        SmartDashboard.putString("Auton", autonName);
+        System.out.println("Auton Name: " + autonName);
     }
 
     public void autonomousInit() {
@@ -110,7 +136,6 @@ public class Main extends IterativeRobot {
         } else if (auton == 2) {
             Shoot2CenterlineD.run();
         }
-
     }
 
     public void teleopInit() {
@@ -204,7 +229,7 @@ public class Main extends IterativeRobot {
         double altitude = SmartDashboard.getNumber("altitude", 0.0);
         double range = SmartDashboard.getNumber("TargetRange", 0.0);
 
-        double offset = 0;
+        double offset = Constants.VISION_OFFSET_REAR_CTR;   //Offset for shots from scoring position
 
         if (autoAimOut) {
             altitude = -altitude + 90;      //Get te complement of the altitude angle because arm is referenced from vertical.
@@ -219,7 +244,7 @@ public class Main extends IterativeRobot {
                 //altitude += Constants.VISION_OFFSET_REAR_CNR;
                 //System.out.println("Corner Pyr Shot");
             }
-            altitude += Constants.VISION_OFFSET_REAR_CTR;   //Offset for shots from scoring position
+            altitude += offset;
             altitude = robot.arm.fromDegrees(altitude);     //Convert to pot rotations for the arm
             if (!SmartDashboard.getBoolean("found", false)) {
                 //altitude = 30;
@@ -341,16 +366,16 @@ public class Main extends IterativeRobot {
         SmartDashboard.putNumber("Arm Set Position", robot.arm.getSetpoint());                //arm set pos
         SmartDashboard.putNumber("Arm offset", robot.arm.getActual() - Constants.ARM_LOWER_LIM);//Arm offset from vertical most limt
         SmartDashboard.putNumber("Arm current", robot.arm.getCurrentOutput());
-        SmartDashboard.putBoolean("Arm CAN fault", robot.arm.getCurrentOutput() == -1);
         SmartDashboard.putNumber("Arm Actual - Deg", robot.arm.toDegrees(robot.arm.getActual()));
         SmartDashboard.putNumber("Arm Set - Deg", robot.arm.toDegrees(robot.arm.getSetpoint()));
 
         SmartDashboard.putNumber("yaw", robot.drive.getYaw());
+        //SmartDashboard.putBoolean("Arm Zero Switch", robot.arm.getZeroSwitch());
+    }
 
-        SmartDashboard.putNumber("Left Drive Output", robot.drive.leftOutput);
-        SmartDashboard.putNumber("Right Drive Output", robot.drive.rightOutput);
+    public void testInit() {
+    }
 
-        SmartDashboard.putBoolean("Climber upper limit", robot.climber.getSwitch());
-        SmartDashboard.putBoolean("Arm Zero Switch", robot.arm.getZeroSwitch());
+    public void testPeriodic() {
     }
 }

@@ -102,7 +102,7 @@ public class Constants {
     
     //These setpoints are relative to the arm's topmost limit
     //Arm setpoints
-    public static double ARM_STOW_UP     = ARM_LOWER_LIM+.37;
+    public static double ARM_STOW_UP     = ARM_LOWER_LIM + .37;
     public static double ARM_INTAKE_LOAD = ARM_LOWER_LIM + 1.327;
     public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.327;
     public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.28;
@@ -118,10 +118,6 @@ public class Constants {
     public static double VISION_OFFSET_REAR_CTR = -15.0;        //pbot is -15
     public static double VISION_OFFSET_FRNT_CTR = -8.0;
     public static double VISION_OFFSET_REAR_CNR = -12.0;
-
-    
-    public Constants() {
-    }
 
     //todo: organize these
 }
