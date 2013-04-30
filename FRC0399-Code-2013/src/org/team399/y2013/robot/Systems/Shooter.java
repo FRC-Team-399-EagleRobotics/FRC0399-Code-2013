@@ -40,6 +40,7 @@ public class Shooter implements Runnable {
     //private FIRFilter velocityFilter = new FIRFilter();
     private MovingAverage velFilt = new MovingAverage(10);
     private int stable_counter = 0;
+    public Relay aimLight = new Relay(2);
 
     public Shooter() // make sure that only this class can make instances of Shooter
     {
@@ -217,6 +218,19 @@ public class Shooter implements Runnable {
         }
     }
     
+    long aimStart = 0;
+    long MIN_AIM_TIME = 500;
+    public void setAimLight(boolean state) {
+        if(state) {
+            aimStart = System.currentTimeMillis();
+            aimLight.set(Relay.Value.kForward);
+        } else {
+            if(System.currentTimeMillis() - aimStart > MIN_AIM_TIME) {
+                aimLight.set(Relay.Value.kOff);
+            }
+        }
+    }
+    
     /**
      * Drivetrain encoders are plugged into the shooter jaguars for wiring simplicity
      * @return the left drivetrain encoder position
@@ -337,7 +351,13 @@ public class Shooter implements Runnable {
         } else {
             output = ((error > 0) ? -maxSpeed*speedScalar : -feedFwd * kT);
         }
-        indicator.set(isAtTargetSpeed());
+        
+        double currentDraw = this.getCurrent(0) + 
+                this.getCurrent(1) +
+                this.getCurrent(2);
+        currentDraw /= 3;
+        
+        indicator.set(isAtTargetSpeed() || Math.abs(currentDraw) < 10.0);
         
         
 

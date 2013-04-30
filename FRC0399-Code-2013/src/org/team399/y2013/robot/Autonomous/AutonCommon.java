@@ -38,6 +38,22 @@ public class AutonCommon {
         Main.robot.feeder.setRoller(1.0);
         Timer.delay(feedToKickerDelay);
     }
+    
+    /**
+     * timed sequence for shooting one disc
+     */
+    public static void shootOneDiscFast() {
+        Main.robot.feeder.setKicker(Constants.KICKER_OUT);
+        Main.robot.feeder.setRoller(0);
+        Timer.delay(.25);
+
+        Main.robot.feeder.setKicker(Constants.KICKER_IN);
+        Timer.delay(kickerResetDelay);
+
+        Main.robot.feeder.setRoller(1.0);
+        Timer.delay(.5);
+    }
+    
 
     /**
      * Open loop drive distance function. Use caution with lower speeds in high
@@ -58,7 +74,7 @@ public class AutonCommon {
         Timer.delay(delayTime);
         Main.robot.drive.driveSpeed(-.2*EagleMath.signum(speed), //quick power reversal to brake
                 -.2*EagleMath.signum(speed));
-        Timer.delay(100);
+        Timer.delay(.1);
         Main.robot.drive.driveSpeed(0, 0);
     }
 

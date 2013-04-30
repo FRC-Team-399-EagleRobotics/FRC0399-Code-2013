@@ -21,8 +21,8 @@ public class Shoot2CenterlineD {
     private static long elapsedTime = 0, start = 0;
     private static long timeDelay = 0;
     static double waitForArmDelay = .75;
-    static double ARM_POSITION_OFFSET = 0.0;
-    static double BACK_DIST = 20.0;  //8 feet to drive back
+    static double ARM_POSITION_OFFSET = 0.04;// used to be .04;
+    static double BACK_DIST = 22.0;  //Drive back distance
     static double TOP_SPEED = 16.0; //driving speed will be 12.0 ft/s
 
     public static void start() {
@@ -40,7 +40,7 @@ public class Shoot2CenterlineD {
         start();
         timer.start();
         System.out.println("Beginning centerline auton!");
-    }
+    }   
     static boolean finished = false;
 
     public static void run() {
@@ -52,24 +52,24 @@ public class Shoot2CenterlineD {
 
         if (!finished) {
             //Set arm to shooting position
-            Main.robot.arm.setPointRotations(Main.robot.arm.fromDegrees(60));
+            Main.robot.arm.setPointRotations(Constants.ARM_HIGH_SHOT + ARM_POSITION_OFFSET);
             //Timer delay
             Timer.delay(waitForArmDelay + (timeDelay / 1000));
             //Timer.delay(1.0);
             int vision_ctr = 0; //Vision counter to calcuate 
-            while (vision_ctr <= 10) {
-                System.out.println("Waiting For Vision");
-                SmartDashboard.putNumber("pitch", 90.0 - Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
-                Main.robot.arm.setPointRotations(AutonCommon.autoPitch(0));
-                Timer.delay(.1);
-                vision_ctr++;
-            }
+//            while (vision_ctr <= 10) {
+//                System.out.println("Waiting For Vision");
+//                SmartDashboard.putNumber("pitch", 90.0 - Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
+//                Main.robot.arm.setPointRotations(AutonCommon.autoPitch(0));
+//                Timer.delay(.1);
+//                vision_ctr++;
+//            }
             Timer.delay(.25);
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 4; i++) {
 //                SmartDashboard.putNumber("pitch", 90.0-Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
 //                Main.robot.arm.setPointRotations(AutonCommon.autoPitch());
-                AutonCommon.shootOneDisc();
+                AutonCommon.shootOneDiscFast();
             }
 
             Main.robot.arm.setPointRotations(Constants.ARM_STOW_DOWN);
@@ -81,17 +81,22 @@ public class Shoot2CenterlineD {
             Main.robot.arm.setPointRotations(10.0);
             Timer.delay(.5);
             int arm_ctr = 0;    //Safety caunter to prevent a faulty arm condition from blocking all user code from running
-            while (Math.abs(Main.robot.arm.getActual()  - Main.robot.arm.getSetpoint())
-                    > .1 || arm_ctr >= 8) {
-                Main.robot.arm.setPointRotations(10.0);
-                Timer.delay(.25);
-                System.out.println("Waiting for arm to stow...");
-                arm_ctr++;
-            }
+//            while (Math.abs(Main.robot.arm.getActual()  - Main.robot.arm.getSetpoint())
+//                    > .1 || arm_ctr >= 8) {
+//                Main.robot.arm.setPointRotations(10.0);
+//                Timer.delay(.25);
+//                System.out.println("Waiting for arm to stow...");
+//                arm_ctr++;
+//            }
 
-            if(arm_ctr < 8) {
-                AutonCommon.driveDistanceNaive(TOP_SPEED, BACK_DIST, Constants.HIGH_GEAR);
-            }
+            Timer.delay(1.25);
+            System.out.println("Driving Back.");
+            //if(arm_ctr < 8) {
+            AutonCommon.driveDistanceNaive(TOP_SPEED, BACK_DIST, Constants.HIGH_GEAR);
+            //}
+            System.out.println("stopping.");
+            AutonCommon.stop();
+            System.out.println("Done.");
 
             finished = true;
         }

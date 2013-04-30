@@ -15,6 +15,7 @@ import org.team399.y2013.Utilities.PulseTriggerBoolean;
 import org.team399.y2013.robot.Autonomous.Shoot2CenterlineD;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonHigh;
 import org.team399.y2013.robot.Autonomous.Shoot3AutonMid;
+import org.team399.y2013.robot.Systems.Shooter;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -109,7 +110,6 @@ public class Main extends IterativeRobot {
             autonName = "INVALID";
         }
         SmartDashboard.putString("Auton", autonName);
-        System.out.println("Auton Name: " + autonName);
     }
 
     public void autonomousInit() {
@@ -122,6 +122,7 @@ public class Main extends IterativeRobot {
             Shoot2CenterlineD.start();
         }
         robot.arm.setPointRotations(Constants.ARM_MID_SHOT);
+        robot.shooter.setAimLight(true);
     }
 
     /**
@@ -136,10 +137,15 @@ public class Main extends IterativeRobot {
         } else if (auton == 2) {
             Shoot2CenterlineD.run();
         }
+        robot.shooter.setAimLight(false);
+        
     }
 
+    long teleopStart = 0;
+    
     public void teleopInit() {
         robot.arm.setBrake(true);
+        teleopStart = System.currentTimeMillis();
     }
     PulseTriggerBoolean autoAimWatcher = new PulseTriggerBoolean();
     boolean autoAimOut = false;
@@ -152,16 +158,35 @@ public class Main extends IterativeRobot {
         updateDashboard();  //Update diagnostic dashboard
         SmartDashboard.putNumber("pitch", 90.0 - robot.arm.toDegrees(robot.arm.getActual()));
 
+        double teleopElapsed = ((double) System.currentTimeMillis() - teleopStart)/1000;
+        
+        if((int)teleopElapsed % 10 == 0 && 
+                DriverStation.getInstance().isFMSAttached()) {
+//            System.out.println("Saving image from camera");
+//            try {
+//                robot.camera.getImage().write("//img" +System.currentTimeMillis() +".bmp");
+//            } catch(Exception e) {
+//                e.printStackTrace();
+//            }
+            
+        }
         autoAimWatcher.set(operatorJoy.getDPad(GamePad.DPadStates.LEFT));
         autoAimOut = autoAimWatcher.get();
 
+     
+        
+            robot.shooter.setAimLight(leftJoy.getRawButton(1));
         //System.out.println("offset" + (arm.getActual() - Constants.ARM_LOWER_LIM));
         if (leftJoy.getRawButton(6)) {
             robot.climber.set(Constants.CLIMBER_UP_SPEED);
         } else if (leftJoy.getRawButton(7)) {
             robot.climber.set(Constants.CLIMBER_DOWN_SPEED);
         } else {
-            robot.climber.set(0);
+            double out = 0;
+            if(Math.abs(operatorJoy.getRightY()) > .5) {
+                out = -operatorJoy.getRightY();
+            }
+            robot.climber.set(out);
         }
 
         double leftAdjust = 0;
@@ -224,12 +249,15 @@ public class Main extends IterativeRobot {
         return x;
     }
 
+    
     double autoPitch() {
 
         double altitude = SmartDashboard.getNumber("altitude", 0.0);
         double range = SmartDashboard.getNumber("TargetRange", 0.0);
 
-        double offset = Constants.VISION_OFFSET_REAR_CTR;   //Offset for shots from scoring position
+        double offset = EagleMath.map((float)leftJoy.getRawAxis(3), 
+                (float)-1, (float)1, (float)-10, (float)10);   //Offset for shots from scoring position
+        System.out.println("Targetting Offset: " + offset);
 
         if (autoAimOut) {
             altitude = -altitude + 90;      //Get te complement of the altitude angle because arm is referenced from vertical.
@@ -272,9 +300,9 @@ public class Main extends IterativeRobot {
         boolean wantShoot = operatorJoy.getButton(6);
 
         if (wantShoot) {
-            robot.feeder.setKicker(Constants.KICKER_OUT);
+            robot.feeder.setKickerTimed(Constants.KICKER_OUT);
         } else {
-            robot.feeder.setKicker(Constants.KICKER_IN);
+            robot.feeder.setKickerTimed(Constants.KICKER_IN);
         }
 
         boolean isShooting = false; //Flag to indicate operator is running the shooter
@@ -283,10 +311,10 @@ public class Main extends IterativeRobot {
 
         if (operatorJoy.getButton(1)) {
             isShooting = true;
-            shooterSet = 1800.0;
+            shooterSet = 6000.0;
         } else if (operatorJoy.getButton(2)) {
             isShooting = true;
-            shooterSet = 2500.0;
+            shooterSet = 6000.0;
         } else if (operatorJoy.getButton(3)) {
             isShooting = true;
             shooterSet = Constants.SHOOTER_SHOT;
@@ -312,7 +340,7 @@ public class Main extends IterativeRobot {
         } else if (operatorJoy.getDPad(GamePad.DPadStates.DOWN) || rightJoy.getRawButton(2)) {
             armSet = Constants.ARM_UPPER_LIM;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.RIGHT)) {
-            armSet = Constants.ARM_MID_SHOT;
+            armSet = Constants.ARM_HIGH_SHOT;
         } else if (operatorJoy.getDPad(GamePad.DPadStates.UP) || rightJoy.getRawButton(3)) {
             armSet = Constants.ARM_STOW_UP;
         } else if (autoAimOut) {
@@ -336,19 +364,18 @@ public class Main extends IterativeRobot {
             }
 
             if (adjustUpButton.get()) {
-                fineAdjustInput = -2 / Constants.DEGREES_PER_TURN;
+                fineAdjustInput = -1.0 / Constants.DEGREES_PER_TURN;
             } else if (adjustDnButton.get()) {
-                fineAdjustInput = 2 / Constants.DEGREES_PER_TURN;
+                fineAdjustInput = 1.0 / Constants.DEGREES_PER_TURN;
             } else {
                 fineAdjustInput = 0;
             }
 
-            fineAdjust *= EagleMath.deadband(fineAdjustInput, .05);
+            fineAdjust *= EagleMath.deadband(fineAdjustInput, .005);
+            
 
             armSet = robot.arm.getSetpoint() + coarseAdjust + fineAdjust;
         }
-
-
 
         robot.shooter.setShooterSpeed(shooterSet);
         robot.arm.setPointRotations(armSet);
@@ -373,9 +400,12 @@ public class Main extends IterativeRobot {
         //SmartDashboard.putBoolean("Arm Zero Switch", robot.arm.getZeroSwitch());
     }
 
+    long testStart = 0;
     public void testInit() {
+        testStart = System.currentTimeMillis();
     }
 
     public void testPeriodic() {
+        
     }
 }

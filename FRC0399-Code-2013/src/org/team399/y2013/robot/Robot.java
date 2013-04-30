@@ -4,7 +4,8 @@
  */
 package org.team399.y2013.robot;
 
-import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.camera.AxisCamera;
 import org.team399.y2013.robot.Systems.Arm;
 import org.team399.y2013.robot.Systems.Automation.AutoShootController;
 import org.team399.y2013.robot.Systems.Climber;
@@ -27,6 +28,9 @@ public class Robot {
     public Shooter shooter;
     public Compressor comp;
     public AutoShootController autoshoot;
+    public Solenoid ringLight;
+    //public AxisCamera camera;
+    
     
     public Arm arm;
     
@@ -39,10 +43,12 @@ public class Robot {
         comp = new Compressor(Constants.COMPRESSOR_SWITCH, Constants.COMPRESSOR_RELAY);        
         arm = Arm.getInstance();
         autoshoot = new AutoShootController(shooter, feeder);
-        
+        ringLight = new Solenoid(Constants.RING_PORT);
         shooter.start();
         comp.start();
         arm.setEnabled(true);
+        ringLight.set(true);
+        //camera = AxisCamera.getInstance();
         System.out.println("Robot is done initializing");
     }
     

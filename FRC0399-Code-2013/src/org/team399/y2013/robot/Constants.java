@@ -52,8 +52,8 @@ public class Constants {
     //Climber Constants:
     public static final int WINCH_PORT = 5;
     public static final int LIMIT_SWITCH_PORT = 5;
-    public static final double CLIMBER_UP_SPEED = -1.0; //Comp Bot == 1.0;
-    public static final double CLIMBER_DOWN_SPEED = 1.0;
+    public static final double CLIMBER_UP_SPEED = 1.0; //Comp Bot == 1.0;
+    public static final double CLIMBER_DOWN_SPEED = -1.0;
     
     //Feeder constants:
     public static final int FEEDER_MOTOR = 6;//pre spring hook port 7;
@@ -105,12 +105,14 @@ public class Constants {
     public static double ARM_STOW_UP     = ARM_LOWER_LIM + .37;
     public static double ARM_INTAKE_LOAD = ARM_LOWER_LIM + 1.327;
     public static double ARM_HUMAN_LOAD  = ARM_LOWER_LIM + 1.327;
-    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.28;
+    public static double ARM_HIGH_SHOT   = ARM_LOWER_LIM + 1.305;
+    public static double ARM_HIGH_SHOT_FRNT   = ARM_LOWER_LIM + 1.235;
     public static double ARM_MID_SHOT    = ARM_LOWER_LIM + 1.42;
     public static double ARM_STOW_DOWN   = ARM_HUMAN_LOAD;
     public static double ARM_LOW_SHOT    = ARM_STOW_DOWN-0.5;
     public static double ARM_CENTER_OFFSET = .0;
-    public static double ARM_AUTON_SHOT    = ARM_LOWER_LIM + 1.37153;
+    public static double ARM_AUTON_SHOT    = ARM_LOWER_LIM + 1.323;
+    public static double ARM_AUTON_STOW_ANGLE = ARM_LOWER_LIM + 0.765;
     
     public static long AUTO_SHOOT_MIN_PERIOD = 375;
     
@@ -119,5 +121,6 @@ public class Constants {
     public static double VISION_OFFSET_FRNT_CTR = -8.0;
     public static double VISION_OFFSET_REAR_CNR = -12.0;
 
+    public static final int RING_PORT = 6;
     //todo: organize these
 }

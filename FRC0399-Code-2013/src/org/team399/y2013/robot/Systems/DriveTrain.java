@@ -249,6 +249,23 @@ public class DriveTrain {
         gear = state;
         shifter.set(gear);
     }
+    
+    long startShift  = 0;
+    long MIN_SHIFT = 500;
+    /**
+     * Set the shifter solenoids
+     * @param state 
+     */
+    public void setShifterTimed(boolean state) {
+        if(state) {
+            setShifter(Constants.LOW_GEAR);
+        } else {
+            if(System.currentTimeMillis() - startShift > MIN_SHIFT) {
+                setShifter(Constants.HIGH_GEAR);
+            }
+        }
+    }
+    
     final double angleP = Constants.YAW_P,
             angleI = Constants.YAW_I,
             angleD = Constants.YAW_D;

@@ -58,12 +58,12 @@ public class Shoot3AutonHigh {
             Timer.delay(waitForArmDelay + (timeDelay / 1000));
             //Timer.delay(1.0);
             int vision_ctr = 0;
-            while(vision_ctr <= 10) {
-                SmartDashboard.putNumber("pitch", 90.0-Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
-                Main.robot.arm.setPointRotations(AutonCommon.autoPitch());
-                Timer.delay(.05);
-                vision_ctr++;
-            }
+//            while(vision_ctr <= 10) {
+//                SmartDashboard.putNumber("pitch", 90.0-Main.robot.arm.toDegrees(Main.robot.arm.getActual()));
+//                Main.robot.arm.setPointRotations(AutonCommon.autoPitch());
+//                Timer.delay(.05);
+//                vision_ctr++;
+//            }
             Timer.delay(.25);
             
             for(int i = 0; i < 5; i++) {
